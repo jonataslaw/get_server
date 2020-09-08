@@ -107,12 +107,26 @@ class GetServer {
     return this;
   }
 
-  // Stream<GetSocket> ws(String path, {List<String> keys}) {
-  //   final route = Route(Method.ws, path, null, keys: keys);
-  //   _routes.add(route);
+  void get(String path, FutureOr build(Context context), {List<String> keys}) {
+    _routes.add(Route(Method.get, path, build, keys: keys));
+  }
 
-  //   return route.socketStream;
-  // }
+  void post(String path, FutureOr build(Context context), {List<String> keys}) {
+    _routes.add(Route(Method.post, path, build, keys: keys));
+  }
+
+  void delete(String path, FutureOr build(Context context),
+      {List<String> keys}) {
+    _routes.add(Route(Method.delete, path, build, keys: keys));
+  }
+
+  void put(String path, FutureOr build(Context context), {List<String> keys}) {
+    _routes.add(Route(Method.put, path, build, keys: keys));
+  }
+
+  void ws(String path, FutureOr build(Context context), {List<String> keys}) {
+    _routes.add(Route(Method.ws, path, build, keys: keys));
+  }
 
   void _pageNotFound(HttpRequest req) {
     req.response

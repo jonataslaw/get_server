@@ -123,7 +123,35 @@ class SocketPage extends GetView {
 
 Dart is not popular for servers, however, attracting people who already program in Flutter to the backend is now also a mission of GetX. Transforming one-dimensional programmers into full stack developers with 0% learning curve, and reusing code is also one of GetX's goals, and I hope you will help us on this journey.
 
-How can you help?
+### Like most of the "node.js" way?
+The purpose of this package is to make development for Flutter developers easier. However, the javascript ecosystem is very large and you may be used to a more functional syntax.
+With get_server you can use this path. You can use get_server as well:
+
+```dart
+void main() {
+  final app = GetServer();
+  app.get('/', (res) => res.send('Get_server of javascript way'));
+  app.ws('/socket', (res) {
+    res.ws.listen((socket) {
+      socket.onMessage.listen((data) {
+        print('data: $data');
+      });
+
+      socket.onOpen.listen((ws) {
+        print('new socket opened');
+      });
+
+      socket.onClose.listen((ws) {
+        print('socket has been closed');
+      });
+    });
+  });
+  app.start();
+}
+```
+
+
+### How can you help?
 - Creating Pull requests, adding resources, improving documentation, creating sample applications, producing articles, videos about Getx, suggesting improvements, and helping to disseminate this framework in development communities.
 - Supporting this project.
 
