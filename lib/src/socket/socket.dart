@@ -43,7 +43,7 @@ class GetSocket implements WebSocketBase {
   }
 
   @override
-  void send(String message) {
+  void send(Object message) {
     _ws.add(message);
   }
 
@@ -52,10 +52,13 @@ class GetSocket implements WebSocketBase {
     _ws.add({event: data});
   }
 
+  ///Listen messages to socket
   Stream get onMessage => _messages;
 
+  ///Listen socket open
   Stream get onOpen => _openController.stream;
 
+  ///Listen socket close
   Stream get onClose => _closeController.stream;
 
   @override

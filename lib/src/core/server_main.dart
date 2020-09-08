@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'package:get_server/get_server.dart';
 import 'package:http_server/http_server.dart';
+import '../../get_server.dart';
 import '../logger/log.dart';
 import '../routes/route.dart';
 
@@ -34,7 +34,7 @@ class GetServer {
   final String privateKey;
   final String password;
   final bool cors;
-  List<Route> _routes = <Route>[];
+  final List<Route> _routes = <Route>[];
   HttpServer _server;
   VirtualDirectory _staticServer;
 

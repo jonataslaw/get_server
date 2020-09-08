@@ -7,9 +7,7 @@ import '../pages/upload.dart';
 import '../pages/user.dart';
 part 'app_routes.dart';
 
-class AppPages {
-  static const INITIAL = Routes.HOME;
-
+abstract class AppPages {
   static final routes = [
     GetPage(name: Routes.HOME, page: HomePage()),
     GetPage(name: Routes.USER, page: UserPage()),

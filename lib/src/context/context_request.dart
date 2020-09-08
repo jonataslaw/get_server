@@ -26,11 +26,9 @@ class ContextRequest {
 
   List header(String name) => _request.headers[name.toLowerCase()];
 
-  bool accepts(String type) =>
-      _request.headers[HttpHeaders.acceptHeader]
-          .where((name) => name.split(',').indexOf(type) > 0)
-          .length >
-      0;
+  bool accepts(String type) => _request.headers[HttpHeaders.acceptHeader]
+      .where((name) => name.split(',').indexOf(type) > 0)
+      .isNotEmpty;
 
   bool isMime(String type, {bool loose = true}) =>
       _request.headers[HttpHeaders.contentTypeHeader]

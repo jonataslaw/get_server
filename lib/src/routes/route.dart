@@ -159,7 +159,8 @@ class Route {
     return {'regexp': RegExp('^$stringPath\$'), 'keys': keys};
   }
 
-  Map<String, String> _parseParams(String path, Map routePath) {
+  Map<String, String> _parseParams(
+      String path, Map<String, dynamic> routePath) {
     final params = <String, String>{};
     Match paramsMatch = routePath['regexp'].firstMatch(path);
     for (var i = 0; i < routePath['keys'].length; i++) {
