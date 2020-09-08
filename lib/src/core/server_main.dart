@@ -98,7 +98,7 @@ class GetServer {
       } else if (_staticServer != null) {
         _staticServer.serveRequest(req);
       } else {
-        _pageNotFound(req);
+        pageNotFound(req);
       }
     });
 
@@ -128,7 +128,7 @@ class GetServer {
     _routes.add(Route(Method.ws, path, build, keys: keys));
   }
 
-  void _pageNotFound(HttpRequest req) {
+  void pageNotFound(HttpRequest req) {
     req.response
       ..statusCode = HttpStatus.notFound
       ..close();

@@ -24,6 +24,21 @@ class Context {
   final ContextRequest request;
   final Stream<GetSocket> socketStream;
 
+  Future pageNotFound() {
+    return response.close();
+  }
+
+  void statusCode(int code) {
+    if (code == null) {
+      return;
+    }
+    response.status(code);
+  }
+
+  Future close() {
+    return response.close();
+  }
+
   Stream<GetSocket> get ws => socketStream;
 
   Future send(string) {
@@ -159,8 +174,7 @@ class Route {
     return {'regexp': RegExp('^$stringPath\$'), 'keys': keys};
   }
 
-  Map<String, String> _parseParams(
-      String path, Map<String, dynamic> routePath) {
+  Map<String, String> _parseParams(String path, Map routePath) {
     final params = <String, String>{};
     Match paramsMatch = routePath['regexp'].firstMatch(path);
     for (var i = 0; i < routePath['keys'].length; i++) {
