@@ -1,3 +1,51 @@
+## [0.4.0] 
+* Added Widgets "Text", "Json" and "Html"
+* Breaking changes: now you need return a widget.
+The syntax that used to be similar to that of Flutter, is now identical to that of Flutter:
+
+To show clear text:
+```dart
+void main() {
+  runApp(GetServer(
+    getPages: [
+      GetPage(name: '/', page: Home()),
+    ],
+  ));
+}
+
+class Home extends GetView {
+  @override
+  Widget build(Context context) {
+    return Text("Welcome to GetX");
+  }
+}
+```
+
+To create Websocket page:
+```dart
+class SocketPage extends GetView {
+  @override
+  build(Context context) {
+    return Socket(context, builder: (socket) {
+      socket.onMessage.listen((data) {
+        print('data: $data');
+        socket.send(data);
+      });
+
+      socket.onOpen.listen((ws) {
+        print('new socket opened');
+      });
+
+      socket.onClose.listen((ws) {
+        print('socket has been closed');
+      });
+    });
+  }
+}
+```
+Great performance Improvement. 
+Now Get_Server is 2.3X faster than Node.js to http requests.
+
 ## [0.3.0] 
 * Added join, leave and sendToRoom to websocket
 

@@ -41,8 +41,8 @@ void main() {
 
 class Home extends GetView {
   @override
-  build(Context context) {
-    return context.send("Welcome to GetX");
+  Widget build(Context context) {
+    return Text("Welcome to GetX");
   }
 }
 ```
@@ -53,8 +53,8 @@ What if you want to return a json page?
 ```dart
 class Home extends GetView {
   @override
-  build(Context context) {
-    return context.sendJson({
+  Widget build(Context context) {
+    return Json({
       "fruits": ["banana", "apple", "orange"]
     });
   }
@@ -68,9 +68,9 @@ You just need to copy your Flutter web page and place it in your web project:
 ```dart
 class Home extends GetView {
   @override
-  build(Context context) {
+  Widget build(Context context) {
     final path = '${Directory.current.path}/web/index.html';
-    return context.sendHtml(path);
+    return Html(path);
   }
 }
 ```
@@ -90,7 +90,7 @@ class Home extends GetView {
       "mimeType": upload.mimeType,
       "fileBase64": "${base64Encode(upload.data)}",
     };
-    return context.sendJson(data);
+    return Json(data);
   }
 }
 ```
@@ -103,14 +103,14 @@ Okay, today is your lucky day. This is not just an http server, but also a webso
 class SocketPage extends GetView {
   @override
   build(Context context) {
-    context.ws.listen((socket) {
+    return Socket(context, builder: (socket) {
       socket.onMessage.listen((data) {
-        print('data: $data');   
+        print('data: $data');
+        socket.send(data);
       });
 
       socket.onOpen.listen((ws) {
         print('new socket opened');
-        socket.send('You are connected to server');
       });
 
       socket.onClose.listen((ws) {

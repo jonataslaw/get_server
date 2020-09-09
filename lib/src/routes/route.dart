@@ -1,7 +1,8 @@
 import 'dart:async';
-import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
+import 'package:get_server/src/core/server_main.dart';
+
 import '../context/context_request.dart';
 import '../context/context_response.dart';
 import '../socket/socket.dart';
@@ -15,7 +16,7 @@ enum Method {
   options,
 }
 
-typedef RouteCall<Context> = Function(Context context);
+//typedef RouteCall<Context> = Widget<T> Function<T>(Context context);
 typedef Disposer = Function();
 
 class Context {
@@ -72,48 +73,20 @@ class Context {
       request.payload(encoder: encoder);
 }
 
-class RouteValue<Context> {
-  RouteValue([Context initial]) {
-    _value = initial;
-  }
-  final _updaters = HashSet<RouteCall<Context>>();
-
-  Context _value;
-
-  Context get value => _value;
-
-  set value(Context v) {
-    _value = v;
-    update();
-  }
-
-  Disposer addListener(RouteCall<Context> listener) {
-    _updaters.add(listener);
-    return () => _updaters.remove(listener);
-  }
-
-  update() {
-    _updaters.forEach((element) {
-      element(_value);
-    });
-  }
-}
-
 String enumValueToString(Object o) => o.toString().split('.').last;
 
 class Route {
-  final requestControllers = RouteValue<Context>();
   final _socketController = StreamController<HttpRequest>();
   // Stream<ContextRequest> requestStream;
   Stream<GetSocket> socketStream;
   final Method _method;
   final Map _path;
-  Function(Context) _call;
+  FutureOr<Widget> Function(Context context) _call;
 
   Route(
     Method method,
     dynamic path,
-    RouteCall<Context> call, {
+    FutureOr<Widget> Function(Context context) call, {
     List<String> keys,
     Map<String, List<WebSocket>> rooms,
   })  : _method = method,
@@ -122,7 +95,11 @@ class Route {
       socketStream = _socketController.stream
           .transform(WebSocketTransformer())
           .map((ws) => GetSocket(ws, rooms));
-      call(Context(null, socketStream));
+      final context = Context(null, socketStream);
+      Socket socket = call(context);
+      context.ws.listen((event) {
+        socket.builder(event);
+      });
     } else {
       _call = call;
     }
@@ -134,14 +111,31 @@ class Route {
         _path['regexp'].hasMatch(req.uri.path));
   }
 
-  void handle(HttpRequest req) {
+  void handle(HttpRequest req) async {
     if (_method == Method.ws) {
       _socketController.add(req);
     } else {
       var request = ContextRequest(req);
       request.params = _parseParams(req.uri.path, _path);
       request.response = ContextResponse(req.response);
-      _call(Context(request, socketStream));
+      Widget widget;
+      final prepareWidget = _call(Context(request, socketStream));
+
+      if (prepareWidget is Future) {
+        widget = await prepareWidget;
+      } else {
+        widget = prepareWidget;
+      }
+
+      if (widget is Text) {
+        request.response.send(widget.data);
+      } else if (widget is Json) {
+        request.response.sendJson(widget.data);
+      } else if (widget is Html) {
+        request.response.sendFile(widget.data);
+      } else {
+        request.response.send(widget.data);
+      }
     }
   }
 

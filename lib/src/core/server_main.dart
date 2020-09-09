@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:get_server/src/socket/socket.dart';
 import 'package:http_server/http_server.dart';
+import 'package:meta/meta.dart';
 import '../../get_server.dart';
 import '../logger/log.dart';
 import '../routes/route.dart';
@@ -138,5 +140,28 @@ class GetServer {
 }
 
 abstract class GetView {
-  FutureOr build(Context context);
+  FutureOr<Widget> build(Context context);
+}
+
+abstract class Widget<T> {
+  Widget(this.data);
+  final T data;
+}
+
+class Text extends Widget<String> {
+  Text(String data) : super(data);
+}
+
+class Html extends Widget<String> {
+  Html(String data) : super(data);
+}
+
+class Json extends Widget<dynamic> {
+  Json(dynamic data) : super(data);
+}
+
+class Socket extends Widget<void> {
+  Socket(this.context, {@required this.builder}) : super(null);
+  final Context context;
+  final Function(GetSocket) builder;
 }
