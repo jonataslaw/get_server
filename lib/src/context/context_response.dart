@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:mirrors';
 import 'package:mime/mime.dart';
 
 class ContextResponse {
@@ -38,27 +37,41 @@ class ContextResponse {
     return this;
   }
 
-  ContextResponse cookie(String name, String val, [Map options]) {
-    var cookie = Cookie(
-          Uri.encodeQueryComponent(name),
-          Uri.encodeQueryComponent(val),
-        ),
-        //TODO: Remove dart:mirrors to allow compile on native
-        cookieMirror = reflect(cookie);
+  // ContextResponse cookie(String name, String val, [Map options]) {
+  //   var cookie = Cookie(
+  //         Uri.encodeQueryComponent(name),
+  //         Uri.encodeQueryComponent(val),
+  //       ),
+  //       cookieMirror = reflect(cookie);
 
-    if (options != null) {
-      options.forEach((option, value) {
-        cookieMirror.setField(Symbol(option), value);
-      });
-    }
+  //   if (options != null) {
+  //     options.forEach((option, value) {
+  //       cookieMirror.setField(Symbol(option), value);
+  //     });
+  //   }
+
+  //   _response.cookies.add(cookie);
+  //   return this;
+  // }
+
+  // ContextResponse deleteCookie(String name) {
+  //   final options = {'expires': 'Thu, 01-Jan-70 00:00:01 GMT', 'path': '/'};
+  //   return cookie(name, '', options);
+  // }
+
+  ContextResponse cookie(String name, String val) {
+    var cookie = Cookie(
+      Uri.encodeQueryComponent(name),
+      Uri.encodeQueryComponent(val),
+    );
 
     _response.cookies.add(cookie);
     return this;
   }
 
   ContextResponse deleteCookie(String name) {
-    final options = {'expires': 'Thu, 01-Jan-70 00:00:01 GMT', 'path': '/'};
-    return cookie(name, '', options);
+    //  final options = {'expires': 'Thu, 01-Jan-70 00:00:01 GMT', 'path': '/'};
+    return cookie(name, '');
   }
 
   ContextResponse add(String string) {

@@ -105,14 +105,18 @@ class Route {
   final Method _method;
   final Map _path;
 
-  Route(Method method, dynamic path, RouteCall<Context> call,
-      {List<String> keys})
-      : _method = method,
+  Route(
+    Method method,
+    dynamic path,
+    RouteCall<Context> call, {
+    List<String> keys,
+    Map<String, List<WebSocket>> rooms,
+  })  : _method = method,
         _path = _normalize(path, keys: keys) {
     if (_method == Method.ws) {
       socketStream = _socketController.stream
           .transform(WebSocketTransformer())
-          .map((ws) => GetSocket(ws));
+          .map((ws) => GetSocket(ws, rooms));
       call(Context(null, socketStream));
     } else {
       requestController.addListener(call);
