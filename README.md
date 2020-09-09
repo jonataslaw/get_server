@@ -1,8 +1,9 @@
 # Get Server
 
+The first backend/frontend/mobile framework written in one syntax for Android, iOS, Web, Linux, Mac, Windows, Fuchsia, and backend.
+
 ![](get_server.png)
 
-The first backend/frontend/mobile framework written in one syntax for Android, iOS, Web, Linux, Mac, Windows, Fuchsia, and backend.
 
 GetX is the most popular framework for Flutter, and has gained great engagement in the community for facilitating development to the extreme, making the most complex things of Flutter simple.
 However, many developers start at Flutter/GetX without any basis in the backend, and are forced to learn another stack, another language, to build their APIs.
