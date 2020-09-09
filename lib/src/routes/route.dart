@@ -133,6 +133,8 @@ class Route {
         request.response.sendJson(widget.data);
       } else if (widget is Html) {
         request.response.sendFile(widget.data);
+      } else if (widget is CustomResponse) {
+        widget.builder?.call();
       } else {
         request.response.send(widget.data);
       }

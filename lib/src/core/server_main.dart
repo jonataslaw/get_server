@@ -160,6 +160,11 @@ class Json extends Widget<dynamic> {
   Json(dynamic data) : super(data);
 }
 
+class CustomResponse extends Widget<Function> {
+  Future<dynamic> Function() builder;
+  CustomResponse(this.builder) : super(builder);
+}
+
 class Socket extends Widget<void> {
   Socket(this.context, {@required this.builder}) : super(null);
   final Context context;
