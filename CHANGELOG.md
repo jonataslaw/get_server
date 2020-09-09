@@ -1,3 +1,6 @@
+## [0.3.0] 
+* Added join, leave and sendToRoom to websocket
+
 ## [0.2.0] 
 * Added "pageNotFound" to context, and "close"
 
