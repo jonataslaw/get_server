@@ -41,14 +41,12 @@ class Context {
 
   Stream<GetSocket> get ws => socketStream;
 
-  Future send(string) {
+  Future send(Object string) {
     return response.send(string);
   }
 
-  Future<MultipartUpload> file(String name, {Encoding encoder = utf8}) async {
-    final payload = await request.payload(encoder: encoder);
-    final multiPart = await payload[name];
-    return multiPart;
+  Future sendBytes(List<int> data) {
+    return response.send(data);
   }
 
   Future sendJson(Object string) {
@@ -60,6 +58,12 @@ class Context {
   Future sendHtml(String path) {
     response.header('Content-Type', 'text/html; charset=UTF-8');
     return response.sendFile(path);
+  }
+
+  Future<MultipartUpload> file(String name, {Encoding encoder = utf8}) async {
+    final payload = await request.payload(encoder: encoder);
+    final multiPart = await payload[name];
+    return multiPart;
   }
 
   String param(String name) => request.param(name);
@@ -98,12 +102,13 @@ class RouteValue<Context> {
 String enumValueToString(Object o) => o.toString().split('.').last;
 
 class Route {
-  final requestController = RouteValue<Context>();
+  final requestControllers = RouteValue<Context>();
   final _socketController = StreamController<HttpRequest>();
   // Stream<ContextRequest> requestStream;
   Stream<GetSocket> socketStream;
   final Method _method;
   final Map _path;
+  Function(Context) _call;
 
   Route(
     Method method,
@@ -119,7 +124,7 @@ class Route {
           .map((ws) => GetSocket(ws, rooms));
       call(Context(null, socketStream));
     } else {
-      requestController.addListener(call);
+      _call = call;
     }
   }
 
@@ -136,7 +141,7 @@ class Route {
       var request = ContextRequest(req);
       request.params = _parseParams(req.uri.path, _path);
       request.response = ContextResponse(req.response);
-      requestController.value = Context(request, socketStream);
+      _call(Context(request, socketStream));
     }
   }
 

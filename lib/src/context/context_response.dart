@@ -94,7 +94,7 @@ class ContextResponse {
     return this;
   }
 
-  Future send(String string) {
+  Future send(Object string) {
     _response.write(string);
     return _response.close();
   }
