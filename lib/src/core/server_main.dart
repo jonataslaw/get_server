@@ -156,6 +156,10 @@ class Html extends Widget<String> {
   Html(String data) : super(data);
 }
 
+class HtmlText extends Widget<String> {
+  HtmlText(String data) : super(data);
+}
+
 class Json extends Widget<dynamic> {
   Json(dynamic data) : super(data);
 }

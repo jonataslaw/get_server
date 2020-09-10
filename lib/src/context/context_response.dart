@@ -107,8 +107,16 @@ class ContextResponse {
     // if (get('Content-Type') == null) {
     //   type('application/json');
     // }
-    _response.headers.set('Content-Type', 'application/json; charset=utf-8');
+
+    // create a temporary solution
+    _response.headers.set('Content-Type', 'application/json; charset=UTF-8');
     _response.write(jsonEncode(data));
+    return _response.close();
+  }
+
+  Future sendHtmlText(Object data) {
+    _response.headers.set('Content-Type', 'text/html; charset=UTF-8');
+    _response.write(data);
     return _response.close();
   }
 

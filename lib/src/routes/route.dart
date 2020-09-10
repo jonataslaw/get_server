@@ -52,11 +52,13 @@ class Context {
 
   Future sendJson(Object string) {
     return response
+        // this headers are not working
         .header('Content-Type', 'application/json; charset=UTF-8')
         .sendJson(string);
   }
 
   Future sendHtml(String path) {
+    // this headers are not working
     response.header('Content-Type', 'text/html; charset=UTF-8');
     return response.sendFile(path);
   }
@@ -133,6 +135,8 @@ class Route {
         request.response.sendJson(widget.data);
       } else if (widget is Html) {
         request.response.sendFile(widget.data);
+      } else if (widget is HtmlText) {
+        request.response.sendHtmlText(widget.data);
       } else if (widget is WidgetBuilder) {
         widget.builder?.call(widget.context);
       } else {
