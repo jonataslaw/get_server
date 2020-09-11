@@ -111,7 +111,7 @@ class Route {
         _path['regexp'].hasMatch(req.uri.path));
   }
 
-  void handle(HttpRequest req) async {
+  void handle(HttpRequest req,{int status}) async {
     if (_method == Method.ws) {
       _socketController.add(req);
     } else {
