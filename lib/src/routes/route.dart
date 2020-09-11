@@ -111,13 +111,14 @@ class Route {
         _path['regexp'].hasMatch(req.uri.path));
   }
 
-  void handle(HttpRequest req,{int status}) async {
+  void handle(HttpRequest req, {int status}) async {
     if (_method == Method.ws) {
       _socketController.add(req);
     } else {
       var request = ContextRequest(req);
       request.params = _parseParams(req.uri.path, _path);
       request.response = ContextResponse(req.response);
+      if (status != null) request.response.status(status);
       Widget widget;
       final prepareWidget = _call(Context(request, socketStream));
 
