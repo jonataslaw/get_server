@@ -38,6 +38,7 @@ class GetServer {
   final bool cors;
   final List<Route> _routes = <Route>[];
   final GetView onNotFound;
+  final bool useLog;
   HttpServer _server;
   VirtualDirectory _staticServer;
 
@@ -52,6 +53,7 @@ class GetServer {
     this.cors = false,
     this.log = logger,
     this.onNotFound,
+    this.useLog = true,
   });
 
   void stop() => _server.close();
@@ -89,7 +91,7 @@ class GetServer {
   FutureOr<GetServer> _configure(HttpServer httpServer) {
     _server = httpServer;
     httpServer.listen((req) {
-      log('Method ${req.method} on ${req.uri}');
+      if (useLog) log('Method ${req.method} on ${req.uri}');
       if (cors) {
         addCorsHeaders(req.response);
         if (req.method.toLowerCase() == 'options') {
