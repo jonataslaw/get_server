@@ -139,7 +139,9 @@ class Route {
       } else if (widget is HtmlText) {
         request.response.sendHtmlText(widget.data);
       } else if (widget is WidgetBuilder) {
-        widget.builder?.call(widget.context);
+        widget.builder?.call(Context(request, socketStream));
+      } else if (widget is GetWidget) {
+        widget.build?.call(Context(request, socketStream));
       } else {
         request.response.send(widget.data);
       }

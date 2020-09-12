@@ -153,39 +153,45 @@ class GetServer {
   }
 }
 
+// Suggestion, change that name to GetEndpoint
 abstract class GetView {
   FutureOr<Widget> build(Context context);
 }
 
 abstract class Widget<T> {
-  Widget(this.data);
+  Widget({this.data});
   final T data;
 }
 
+//TODO: Change the name after
+abstract class GetWidget extends Widget {
+  Future build(Context context);
+}
+
 class Text extends Widget<String> {
-  Text(String data) : super(data);
+  Text(String text) : super(data: text);
 }
 
 class Html extends Widget<String> {
-  Html(String data) : super(data);
+  Html(String path) : super(data: path);
 }
 
 class HtmlText extends Widget<String> {
-  HtmlText(String data) : super(data);
+  HtmlText(String htmlText) : super(data: htmlText);
 }
 
 class Json extends Widget<dynamic> {
-  Json(dynamic data) : super(data);
+  Json(dynamic jsonRaw) : super(data: jsonRaw);
 }
 
-class WidgetBuilder extends Widget<Function> {
+class WidgetBuilder extends Widget {
   final Context context;
-  final Function(Context) builder;
-  WidgetBuilder(this.context, {@required this.builder}) : super(null);
+  final Future Function(Context) builder;
+  WidgetBuilder(this.context, {@required this.builder});
 }
 
 class Socket extends Widget<void> {
-  Socket(this.context, {@required this.builder}) : super(null);
+  Socket(this.context, {@required this.builder});
   final Context context;
   final Function(GetSocket) builder;
 }
