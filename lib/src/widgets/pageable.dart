@@ -38,7 +38,8 @@ class Pageable extends GetWidget {
     final fistElement = (page - 1) * size;
     final lastElement = page * size;
 
-    final totalPages = (list.length / size).ceil();
+    int totalPages = (list.length / size).ceil();
+    totalPages = totalPages == 0 ? 1 : totalPages;
 
     if (totalPages < page) {
       return context.response.status(HttpStatus.badRequest).sendJson(_Erro(
