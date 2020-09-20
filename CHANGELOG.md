@@ -1,3 +1,10 @@
+## [0.6.0] 
+* Added fully compatibility with GetX
+* Added Bindings and Controllers
+
+## [0.5.0] 
+* Added PageNotFound on GetServer
+
 ## [0.4.0] 
 * Added Widgets "Text", "Json" and "Html"
 * Breaking changes: now you need return a widget.

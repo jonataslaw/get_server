@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:get_server/src/logger/log.dart';
+import 'package:get_instance/get_instance.dart';
 
 abstract class WebSocketBase {
   void send(String msg);
@@ -85,7 +85,7 @@ class GetSocket implements WebSocketBase {
     if (rooms.containsKey(room)) {
       rooms[room].add(_ws);
     } else {
-      logger("Room $room don't exists");
+      Get.log("Room $room don't exists");
     }
   }
 
@@ -94,7 +94,7 @@ class GetSocket implements WebSocketBase {
     if (room.contains(room)) {
       rooms[room].remove(_ws);
     } else {
-      logger("Room $room don't exists");
+      Get.log("Room $room don't exists");
     }
   }
 

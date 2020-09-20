@@ -5,7 +5,6 @@ import 'package:get_server/src/socket/socket.dart';
 import 'package:http_server/http_server.dart';
 import 'package:meta/meta.dart';
 import '../../get_server.dart';
-import '../logger/log.dart';
 import '../routes/route.dart';
 
 class GetPage {
@@ -13,11 +12,13 @@ class GetPage {
   final String name;
   final List<String> keys;
   final GetView page;
+  final Bindings binding;
 
-  GetPage({
+  const GetPage({
     this.method = Method.get,
     this.name = '/',
     this.page,
+    this.binding,
     this.keys,
   });
 }
@@ -51,10 +52,18 @@ class GetServer {
     this.shared = false,
     this.getPages,
     this.cors = false,
-    this.log = logger,
+    this.log,
     this.onNotFound,
+    this.initialBinding,
     this.useLog = true,
-  });
+  }) {
+    if (log != null) {
+      Get.log = log;
+    }
+    initialBinding?.dependencies();
+  }
+
+  final Bindings initialBinding;
 
   void stop() => _server.close();
 
@@ -64,7 +73,7 @@ class GetServer {
     if (getPages != null) {
       getPages.forEach((route) {
         _routes.add(Route(route.method, route.name, route.page.build,
-            keys: route.keys));
+            binding: route.binding, keys: route.keys));
       });
     }
 
@@ -91,7 +100,11 @@ class GetServer {
   FutureOr<GetServer> _configure(HttpServer httpServer) {
     _server = httpServer;
     httpServer.listen((req) {
-      if (useLog) log('Method ${req.method} on ${req.uri}');
+      if (useLog) Get.log('Method ${req.method} on ${req.uri}');
+      var route =
+          _routes.firstWhere((route) => route.match(req), orElse: () => null);
+
+      route?.binding?.dependencies();
       if (cors) {
         addCorsHeaders(req.response);
         if (req.method.toLowerCase() == 'options') {
@@ -100,8 +113,7 @@ class GetServer {
           req.response.close();
         }
       }
-      var route =
-          _routes.firstWhere((route) => route.match(req), orElse: () => null);
+
       if (route != null) {
         route.handle(req);
       } else if (_staticServer != null) {
@@ -120,7 +132,7 @@ class GetServer {
       }
     });
 
-    log('Server started on $host:$port');
+    Get.log('Server started on $host:$port');
 
     return this;
   }
@@ -154,7 +166,10 @@ class GetServer {
 }
 
 // Suggestion, change that name to GetEndpoint
-abstract class GetView {
+abstract class GetView<T> {
+  final String tag = null;
+
+  T get controller => GetInstance().find<T>(tag: tag);
   FutureOr<Widget> build(Context context);
 }
 
@@ -164,8 +179,17 @@ abstract class Widget<T> {
 }
 
 //TODO: Change the name after
-abstract class GetWidget extends Widget {
-  Future build(Context context);
+abstract class GetWidget<T> extends Widget {
+  final Set<T> _value = <T>{};
+
+  final String tag = null;
+
+  T get controller {
+    if (_value.isEmpty) _value.add(GetInstance().find<T>(tag: tag));
+    return _value.first;
+  }
+
+  FutureOr build(Context context);
 }
 
 class Text extends Widget<String> {

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:get_instance/get_instance.dart';
 import 'package:get_server/src/core/server_main.dart';
 
 import '../context/context_request.dart';
@@ -83,12 +84,14 @@ class Route {
   Stream<GetSocket> socketStream;
   final Method _method;
   final Map _path;
+  final Bindings binding;
   FutureOr<Widget> Function(Context context) _call;
 
   Route(
     Method method,
     dynamic path,
     FutureOr<Widget> Function(Context context) call, {
+    this.binding,
     List<String> keys,
     Map<String, List<WebSocket>> rooms,
   })  : _method = method,
@@ -113,7 +116,7 @@ class Route {
         _path['regexp'].hasMatch(req.uri.path));
   }
 
-  void handle(HttpRequest req, {int status}) async {
+  Future<void> handle(HttpRequest req, {int status}) async {
     if (_method == Method.ws) {
       _socketController.add(req);
     } else {
