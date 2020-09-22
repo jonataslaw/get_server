@@ -1,3 +1,9 @@
+# [0.6.4] 
+* Fix pageable
+
+## [0.6.3] 
+* Fix examples
+
 ## [0.6.2] 
 * Unification of GetPages from GetServer with GetX.
 Now GetPage receives a function that returns a widget, both in get_server and Getx.

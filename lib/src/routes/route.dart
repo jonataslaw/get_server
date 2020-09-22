@@ -132,7 +132,7 @@ class Route {
       } else {
         widget = prepareWidget;
       }
-
+      print(widget.runtimeType.toString());
       if (widget is Text) {
         request.response.send(widget.data);
       } else if (widget is Json) {
@@ -144,7 +144,8 @@ class Route {
       } else if (widget is WidgetBuilder) {
         widget.builder?.call(BuildContext(request, socketStream));
       } else if (widget is GetWidget) {
-        widget.build?.call(BuildContext(request, socketStream));
+        final wid = await widget.build(BuildContext(request, socketStream));
+        request.response.send(wid.data);
       } else {
         request.response.send(widget.data);
       }
