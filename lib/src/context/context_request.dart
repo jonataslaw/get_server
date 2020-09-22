@@ -45,6 +45,9 @@ class ContextRequest {
           .where((value) => loose ? value.contains(type) : value == type)
           .isNotEmpty;
 
+  bool get hasContentType =>
+      _request.headers[HttpHeaders.contentTypeHeader] != null;
+
   bool get isForwarded => _request.headers['x-forwarded-host'] != null;
 
   HttpRequest get input => _request;
@@ -77,8 +80,13 @@ class ContextRequest {
     return null;
   }
 
+  /// Get the payload (body)
+  ///
+  /// If don't have the contentType of payload will return null
   Future<Map> payload({Encoding encoder = utf8}) {
     var completer = Completer<Map>();
+
+    if (!hasContentType) return null;
 
     if (isMime('application/x-www-form-urlencoded')) {
       const AsciiDecoder().bind(_request).listen((content) {
