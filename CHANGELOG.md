@@ -1,3 +1,7 @@
+## [0.6.2] 
+* Unification of GetPages from GetServer with GetX.
+Now GetPage receives a function that returns a widget, both in get_server and Getx.
+
 ## [0.6.1] 
 * Fix typo on build method. 
 Possible breakchanges:

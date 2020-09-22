@@ -11,7 +11,7 @@ class GetPage {
   final Method method;
   final String name;
   final List<String> keys;
-  final GetView page;
+  final GetView Function() page;
   final Bindings binding;
 
   const GetPage({
@@ -72,7 +72,7 @@ class GetServer {
   Future<GetServer> start() {
     if (getPages != null) {
       getPages.forEach((route) {
-        _routes.add(Route(route.method, route.name, route.page.build,
+        _routes.add(Route(route.method, route.name, route?.page()?.build,
             binding: route.binding, keys: route.keys));
       });
     }
