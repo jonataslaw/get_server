@@ -2,7 +2,7 @@ import 'package:get_server/get_server.dart';
 
 class SocketPage extends GetView {
   @override
-  build(Context context) {
+  Widget build(BuildContext context) {
     return Socket(context, builder: (socket) {
       socket.onMessage.listen((data) {
         print('data: $data');

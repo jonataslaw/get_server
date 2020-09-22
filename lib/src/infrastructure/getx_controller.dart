@@ -4,8 +4,8 @@ import 'package:get_server/src/context/context_response.dart';
 import '../../get_server.dart';
 
 class GetxController extends DisposableInterface {
-  Context _context;
-  void setContext(Context c) {
+  BuildContext _context;
+  void setContext(BuildContext c) {
     _context = c;
   }
 

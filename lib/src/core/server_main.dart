@@ -137,24 +137,28 @@ class GetServer {
     return this;
   }
 
-  void get(String path, FutureOr build(Context context), {List<String> keys}) {
+  void get(String path, FutureOr build(BuildContext context),
+      {List<String> keys}) {
     _routes.add(Route(Method.get, path, build, keys: keys));
   }
 
-  void post(String path, FutureOr build(Context context), {List<String> keys}) {
+  void post(String path, FutureOr build(BuildContext context),
+      {List<String> keys}) {
     _routes.add(Route(Method.post, path, build, keys: keys));
   }
 
-  void delete(String path, FutureOr build(Context context),
+  void delete(String path, FutureOr build(BuildContext context),
       {List<String> keys}) {
     _routes.add(Route(Method.delete, path, build, keys: keys));
   }
 
-  void put(String path, FutureOr build(Context context), {List<String> keys}) {
+  void put(String path, FutureOr build(BuildContext context),
+      {List<String> keys}) {
     _routes.add(Route(Method.put, path, build, keys: keys));
   }
 
-  void ws(String path, FutureOr build(Context context), {List<String> keys}) {
+  void ws(String path, FutureOr build(BuildContext context),
+      {List<String> keys}) {
     _routes.add(Route(Method.ws, path, build, keys: keys));
   }
 
@@ -170,7 +174,7 @@ abstract class GetView<T> {
   final String tag = null;
 
   T get controller => GetInstance().find<T>(tag: tag);
-  FutureOr<Widget> build(Context context);
+  FutureOr<Widget> build(BuildContext context);
 }
 
 abstract class Widget<T> {
@@ -189,7 +193,7 @@ abstract class GetWidget<T> extends Widget {
     return _value.first;
   }
 
-  FutureOr build(Context context);
+  FutureOr build(BuildContext context);
 }
 
 class Text extends Widget<String> {
@@ -209,13 +213,13 @@ class Json extends Widget<dynamic> {
 }
 
 class WidgetBuilder extends Widget {
-  final Context context;
-  final Future Function(Context) builder;
+  final BuildContext context;
+  final Future Function(BuildContext) builder;
   WidgetBuilder(this.context, {@required this.builder});
 }
 
 class Socket extends Widget<void> {
   Socket(this.context, {@required this.builder});
-  final Context context;
+  final BuildContext context;
   final Function(GetSocket) builder;
 }

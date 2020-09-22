@@ -1,3 +1,8 @@
+## [0.6.1] 
+* Fix typo on build method. 
+Possible breakchanges:
+For a typo, `build(BuildContext context)` was used as `build(Context context)`. This bug was fixed in this version, so you should probably change the "Context" type to "BuildContext" if your build was typed.
+
 ## [0.6.0] 
 * Added fully compatibility with GetX
 * Added Bindings and Controllers

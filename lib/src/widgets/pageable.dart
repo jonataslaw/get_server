@@ -10,7 +10,7 @@ class Pageable extends GetWidget {
   Pageable(this.list, {this.page = 1, this.size = 10});
 
   @override
-  Future build(Context context) {
+  Future build(BuildContext context) {
     String pageparam = context.param('page');
     if (pageparam != null) {
       int _page = int.parse(pageparam, onError: (_) => null);

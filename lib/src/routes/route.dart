@@ -20,8 +20,8 @@ enum Method {
 //typedef RouteCall<Context> = Widget<T> Function<T>(Context context);
 typedef Disposer = Function();
 
-class Context {
-  Context(this.request, this.socketStream);
+class BuildContext {
+  BuildContext(this.request, this.socketStream);
   ContextResponse get response => request.response;
   final ContextRequest request;
   final Stream<GetSocket> socketStream;
@@ -85,12 +85,12 @@ class Route {
   final Method _method;
   final Map _path;
   final Bindings binding;
-  FutureOr<Widget> Function(Context context) _call;
+  FutureOr<Widget> Function(BuildContext context) _call;
 
   Route(
     Method method,
     dynamic path,
-    FutureOr<Widget> Function(Context context) call, {
+    FutureOr<Widget> Function(BuildContext context) call, {
     this.binding,
     List<String> keys,
     Map<String, List<WebSocket>> rooms,
@@ -100,7 +100,7 @@ class Route {
       socketStream = _socketController.stream
           .transform(WebSocketTransformer())
           .map((ws) => GetSocket(ws, rooms));
-      final context = Context(null, socketStream);
+      final context = BuildContext(null, socketStream);
       Socket socket = call(context);
       context.ws.listen((event) {
         socket.builder(event);
@@ -125,7 +125,7 @@ class Route {
       request.response = ContextResponse(req.response);
       if (status != null) request.response.status(status);
       Widget widget;
-      final prepareWidget = _call(Context(request, socketStream));
+      final prepareWidget = _call(BuildContext(request, socketStream));
 
       if (prepareWidget is Future) {
         widget = await prepareWidget;
@@ -142,9 +142,9 @@ class Route {
       } else if (widget is HtmlText) {
         request.response.sendHtmlText(widget.data);
       } else if (widget is WidgetBuilder) {
-        widget.builder?.call(Context(request, socketStream));
+        widget.builder?.call(BuildContext(request, socketStream));
       } else if (widget is GetWidget) {
-        widget.build?.call(Context(request, socketStream));
+        widget.build?.call(BuildContext(request, socketStream));
       } else {
         request.response.send(widget.data);
       }
