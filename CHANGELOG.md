@@ -1,3 +1,6 @@
+# [0.6.5] 
+* Improve Widget three
+
 # [0.6.4] 
 * Fix pageable
 
