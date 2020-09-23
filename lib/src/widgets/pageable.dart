@@ -62,7 +62,7 @@ class Pageable extends GetWidget {
         totalElements: list.length,
         totalPages: totalPages);
 
-    return Json(pageable.toJson());
+    return Json(pageable);
   }
 }
 
@@ -89,7 +89,7 @@ class _Pageable {
           content is List<DateTime>) {
         data['content'] = content;
       } else {
-        data['content'] = content.map((v) => jsonEncode(v)).toList();
+        data['content'] = content.map((v) => v.toJson()).toList();
       }
     }
     data['size'] = size;
