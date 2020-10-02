@@ -16,6 +16,16 @@ class MultipartUpload {
     this.contentTransferEncoding,
     this.data,
   );
+
+  dynamic toJson() => {
+        "name": name,
+        "mimeType": mimeType,
+        "fileBase64": "${base64Encode(data)}",
+        "transferEncoding": "$contentTransferEncoding"
+      };
+
+  @override
+  String toString() => toJson().toString();
 }
 
 class ContextRequest {

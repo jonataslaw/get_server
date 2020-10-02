@@ -3,8 +3,7 @@ import '../controller/user_controller.dart';
 
 class UserPage extends GetView<UserController> {
   @override
-  build(BuildContext context) {
-    final user = controller.getUser(context.request).toJson();
-    return Json(user);
+  Widget build(BuildContext context) {
+    return Json(controller.getUser(context.request));
   }
 }

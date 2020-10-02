@@ -2,6 +2,7 @@ import 'package:get_server/get_server.dart';
 import '../pages/home/home.dart';
 import '../pages/html/html.dart';
 import '../pages/json/json.dart';
+import '../pages/pageable/pageable.dart';
 import '../pages/socket/socket.dart';
 import '../pages/upload/upload.dart';
 import '../pages/user/bindings/user_binding.dart';
@@ -14,6 +15,7 @@ abstract class AppPages {
     GetPage(name: Routes.USER, page: () => UserPage(), binding: UserBinding()),
     GetPage(name: Routes.FRUITS, page: () => JsonPage()),
     GetPage(name: Routes.LANDING, page: () => HtmlPage()),
+    GetPage(name: '/pageable', page: () => PageablePage()),
     GetPage(name: Routes.UPLOAD, page: () => UploadPage(), method: Method.post),
     GetPage(name: Routes.SOCKET, page: () => SocketPage(), method: Method.ws),
   ];

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:get_server/get_server.dart';
@@ -10,15 +11,16 @@ class Pageable extends GetWidget {
   Pageable(this.list, {this.page = 1, this.size = 10});
 
   @override
-  Future build(BuildContext context) {
+  Widget build(BuildContext context) {
     String pageparam = context.param('page');
     if (pageparam != null) {
       int _page = int.parse(pageparam, onError: (_) => null);
       if (_page == null) {
-        return context.response.status(HttpStatus.badRequest).sendJson(_Erro(
+        context.response.status(HttpStatus.badRequest).sendJson(_Erro(
             errocode: HttpStatus.badRequest,
             description:
                 'The page parameter must receive an int: $pageparam it\'s not an int'));
+        return null;
       }
       page = _page;
     }
@@ -27,10 +29,11 @@ class Pageable extends GetWidget {
     if (sizeparam != null) {
       int _size = int.parse(sizeparam, onError: (_) => null);
       if (_size == null) {
-        return context.response.status(HttpStatus.badRequest).sendJson(_Erro(
+        context.response.status(HttpStatus.badRequest).sendJson(_Erro(
             errocode: HttpStatus.badRequest,
             description:
                 'The size parameter must receive an int: $sizeparam it\'s not an int'));
+        return null;
       }
       size = _size;
     }
@@ -42,10 +45,11 @@ class Pageable extends GetWidget {
     totalPages = totalPages == 0 ? 1 : totalPages;
 
     if (totalPages < page) {
-      return context.response.status(HttpStatus.badRequest).sendJson(_Erro(
+      context.response.status(HttpStatus.badRequest).sendJson(_Erro(
           errocode: HttpStatus.badRequest,
           description:
               'The reported page is larger than the maximum page: report something between 1 and $totalPages'));
+      return null;
     }
 
     final result = list.sublist(
@@ -57,7 +61,8 @@ class Pageable extends GetWidget {
         size: size,
         totalElements: list.length,
         totalPages: totalPages);
-    return context.sendJson(pageable);
+
+    return Json(pageable);
   }
 }
 

@@ -193,7 +193,7 @@ abstract class GetWidget<T> extends Widget {
     return _value.first;
   }
 
-  FutureOr build(BuildContext context);
+  FutureOr<Widget> build(BuildContext context);
 }
 
 class Text extends Widget<String> {

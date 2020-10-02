@@ -132,22 +132,26 @@ class Route {
       } else {
         widget = prepareWidget;
       }
+      _sendResponse(widget, request);
+    }
+  }
 
-      if (widget is Text) {
-        request.response.send(widget.data);
-      } else if (widget is Json) {
-        request.response.sendJson(widget.data);
-      } else if (widget is Html) {
-        request.response.sendFile(widget.data);
-      } else if (widget is HtmlText) {
-        request.response.sendHtmlText(widget.data);
-      } else if (widget is WidgetBuilder) {
-        widget.builder?.call(BuildContext(request, socketStream));
-      } else if (widget is GetWidget) {
-        widget.build?.call(BuildContext(request, socketStream));
-      } else {
-        request.response.send(widget.data);
-      }
+  void _sendResponse(widget, request) async {
+    if (widget is Text) {
+      request.response.send(widget.data);
+    } else if (widget is Json) {
+      request.response.sendJson(widget.data);
+    } else if (widget is Html) {
+      request.response.sendFile(widget.data);
+    } else if (widget is HtmlText) {
+      request.response.sendHtmlText(widget.data);
+    } else if (widget is WidgetBuilder) {
+      widget.builder?.call(BuildContext(request, socketStream));
+    } else if (widget is GetWidget) {
+      final wid = await widget.build(BuildContext(request, socketStream));
+      _sendResponse(wid, request);
+    } else {
+      request.response.send(widget.data);
     }
   }
 
