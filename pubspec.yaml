@@ -12,6 +12,7 @@ dependencies:
   http_server: ">=0.9.0 <1.0.0"
   get_instance: ">=3.10.2 <4.0.0"
   get_rx: ">=3.10.2 <4.0.0"
+  jaguar_jwt: ^2.1.6
   
 
 dev_dependencies:

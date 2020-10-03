@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:get_instance/get_instance.dart';
 import 'package:get_server/src/core/server_main.dart';
+import 'package:jaguar_jwt/jaguar_jwt.dart';
 
 import '../context/context_request.dart';
 import '../context/context_response.dart';
@@ -85,6 +86,8 @@ class Route {
   final Method _method;
   final Map _path;
   final Bindings binding;
+  final bool _needAuth;
+  final String _jwtKey;
   FutureOr<Widget> Function(BuildContext context) _call;
 
   Route(
@@ -93,8 +96,12 @@ class Route {
     FutureOr<Widget> Function(BuildContext context) call, {
     this.binding,
     List<String> keys,
+    bool needAuth = false,
+    String jwtKey,
     Map<String, List<WebSocket>> rooms,
   })  : _method = method,
+        _needAuth = needAuth,
+        _jwtKey = jwtKey,
         _path = _normalize(path, keys: keys) {
     if (_method == Method.ws) {
       socketStream = _socketController.stream
@@ -124,6 +131,7 @@ class Route {
       request.params = _parseParams(req.uri.path, _path);
       request.response = ContextResponse(req.response);
       if (status != null) request.response.status(status);
+
       Widget widget;
       final prepareWidget = _call(BuildContext(request, socketStream));
 
@@ -132,7 +140,18 @@ class Route {
       } else {
         widget = prepareWidget;
       }
-      _sendResponse(widget, request);
+
+      if (_needAuth) {
+        var message = _authHandler(request, _jwtKey);
+        if (message == null) {
+          _sendResponse(widget, request);
+        } else {
+          request.response.status(401);
+          _sendResponse(Text('401 UNAUTHORIZED\n$message'), request);
+        }
+      } else {
+        _sendResponse(widget, request);
+      }
     }
   }
 
@@ -155,8 +174,11 @@ class Route {
     }
   }
 
-  static Map _normalize(dynamic path,
-      {List<String> keys, bool strict = false}) {
+  static Map _normalize(
+    dynamic path, {
+    List<String> keys,
+    bool strict = false,
+  }) {
     String stringPath = path;
     if (keys == null) {
       keys = [];
@@ -207,5 +229,31 @@ class Route {
       params[routePath['keys'][i]] = param;
     }
     return params;
+  }
+
+  String _authHandler(ContextRequest req, String jwtKey) {
+    dynamic token = req.header('Authorization');
+    try {
+      if (token != null) {
+        token = token.first;
+        if (token.contains('Bearer')) {
+          token = token.replaceAll('Bearer ', '');
+
+          var decClaimSet = verifyJwtHS256Signature(token, jwtKey);
+          if (decClaimSet.expiry.isBefore(DateTime.now())) {
+            return JwtException.tokenExpired.message;
+          }
+        } else {
+          return JwtException.invalidToken.message;
+        }
+      } else {
+        return JwtException.invalidToken.message;
+      }
+      return null;
+    } on JwtException catch (err) {
+      return err.message;
+    } catch (err) {
+      return JwtException.invalidToken.message;
+    }
   }
 }

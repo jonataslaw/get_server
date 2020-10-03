@@ -13,6 +13,7 @@ class GetPage {
   final List<String> keys;
   final GetView Function() page;
   final Bindings binding;
+  final bool needAuth;
 
   const GetPage({
     this.method = Method.get,
@@ -20,6 +21,7 @@ class GetPage {
     this.page,
     this.binding,
     this.keys,
+    this.needAuth = false,
   });
 }
 
@@ -40,6 +42,7 @@ class GetServer {
   final List<Route> _routes = <Route>[];
   final GetView onNotFound;
   final bool useLog;
+  final String jwtKey;
   HttpServer _server;
   VirtualDirectory _staticServer;
 
@@ -56,6 +59,7 @@ class GetServer {
     this.onNotFound,
     this.initialBinding,
     this.useLog = true,
+    this.jwtKey,
   }) {
     if (log != null) {
       Get.log = log;
@@ -72,8 +76,17 @@ class GetServer {
   Future<GetServer> start() {
     if (getPages != null) {
       getPages.forEach((route) {
-        _routes.add(Route(route.method, route.name, route?.page()?.build,
-            binding: route.binding, keys: route.keys));
+        _routes.add(
+          Route(
+            route.method,
+            route.name,
+            route?.page()?.build,
+            binding: route.binding,
+            keys: route.keys,
+            needAuth: route.needAuth,
+            jwtKey: jwtKey,
+          ),
+        );
       });
     }
 
