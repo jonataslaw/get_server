@@ -1,4 +1,6 @@
 import 'package:get_server/get_server.dart';
+import '../pages/auth/bindings/auth_binding.dart';
+import '../pages/auth/view/auth.dart';
 import '../pages/home/home.dart';
 import '../pages/html/html.dart';
 import '../pages/json/json.dart';
@@ -13,10 +15,16 @@ abstract class AppPages {
   static final routes = [
     GetPage(name: Routes.HOME, page: () => HomePage()),
     GetPage(name: Routes.USER, page: () => UserPage(), binding: UserBinding()),
-    GetPage(name: Routes.FRUITS, page: () => JsonPage(), needAuth: true),
     GetPage(name: Routes.LANDING, page: () => HtmlPage()),
     GetPage(name: '/pageable', page: () => PageablePage()),
     GetPage(name: Routes.UPLOAD, page: () => UploadPage(), method: Method.post),
     GetPage(name: Routes.SOCKET, page: () => SocketPage(), method: Method.ws),
+    GetPage(name: Routes.FRUITS, page: () => JsonPage(), needAuth: true),
+    GetPage(
+      name: Routes.AUTH,
+      page: () => AuthPage(),
+      method: Method.post,
+      binding: AuthBinding(),
+    ),
   ];
 }
