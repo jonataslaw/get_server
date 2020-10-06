@@ -79,6 +79,10 @@ class BuildContext {
 
 String enumValueToString(Object o) => o.toString().split('.').last;
 
+extension Soc on WebSocket{
+
+}
+
 class Route {
   final _socketController = StreamController<HttpRequest>();
   // Stream<ContextRequest> requestStream;
@@ -104,9 +108,11 @@ class Route {
         _jwtKey = jwtKey,
         _path = _normalize(path, keys: keys) {
     if (_method == Method.ws) {
-      socketStream = _socketController.stream
-          .transform(WebSocketTransformer())
-          .map((ws) => GetSocket(ws, rooms));
+      socketStream =
+          _socketController.stream.transform(WebSocketTransformer()).map((ws) {
+        return GetSocket(ws, rooms);
+      });
+
       final context = BuildContext(null, socketStream);
       Socket socket = call(context);
       context.ws.listen((event) {

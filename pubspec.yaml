@@ -1,10 +1,10 @@
 name: get_server
 description: A backend server that makes it possible to program with Flutter syntax and reuse existing code
-version: 0.7.1
+version: 0.7.2
 homepage: https://github.com/jonataslaw/get_server
 
 environment:
-  sdk: ">=2.2.2 <3.0.0"
+  sdk: ">=2.7.0 <3.0.0"
 
 dependencies:
   meta: ">=1.1.1 <2.0.0"

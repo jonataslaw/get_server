@@ -1,3 +1,6 @@
+# [0.7.2] 
+* Improve onClose from websockets
+
 # [0.7.1] 
 * Added linter
 
