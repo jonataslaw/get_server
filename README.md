@@ -97,6 +97,38 @@ class Home extends GetView {
   }
 }
 ```
+How about Authentication? We have this as well.
+
+First define a secret for your JWT:
+```dart
+void main() {
+  runApp(
+   GetServer(
+    jwtKey: 'your key here',
+   ),
+  );
+}
+```
+Second, retrieve your token:
+```dart
+final claimSet = JwtClaim(
+  maxAge: const Duration(minutes: 5),
+  expiry: DateTime.now().add(Duration(days: 3)),
+  issuer: 'get is awesome',
+  issuedAt: DateTime.now(),
+);
+
+var token = TokenUtil.generateToken(claim: claimSet, jwtKey: 'your key here');
+```
+and finally just flag your routes that need the token to work:
+```dart
+GetPage(
+  name: '/awesome-route',
+  method: Method.get,
+  page: () => YourPage(),
+  needAuth: true,
+),
+```
 
 I'm still not convinced, this is just an http server, but what if I want to create a chat that has real-time communication, how would I do that?
 
