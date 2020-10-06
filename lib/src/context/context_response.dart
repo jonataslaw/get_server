@@ -22,9 +22,7 @@ class ContextResponse {
   ContextResponse type(String contentType) => set('Content-Type', contentType);
 
   ContextResponse cache(String cacheType, [Map<String, String> options]) {
-    if (options == null) {
-      options = {};
-    }
+    options ??= {};
     final value = StringBuffer(cacheType);
     options.forEach((key, val) {
       value.write(', $key=$val');

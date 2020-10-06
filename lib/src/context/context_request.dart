@@ -18,10 +18,10 @@ class MultipartUpload {
   );
 
   dynamic toJson() => {
-        "name": name,
-        "mimeType": mimeType,
-        "fileBase64": "${base64Encode(data)}",
-        "transferEncoding": "$contentTransferEncoding"
+        'name': name,
+        'mimeType': mimeType,
+        'fileBase64': '${base64Encode(data)}',
+        'transferEncoding': '$contentTransferEncoding'
       };
 
   @override
@@ -90,10 +90,11 @@ class ContextRequest {
 
     if (isMime('application/x-www-form-urlencoded')) {
       const AsciiDecoder().bind(_request).listen((content) {
-        final payload = Map.fromIterable(
-            content.split('&').map((kvs) => kvs.split('=')),
-            key: (kv) => Uri.decodeQueryComponent(kv[0], encoding: encoder),
-            value: (kv) => Uri.decodeQueryComponent(kv[1], encoding: encoder));
+        final payload = {
+          for (var kv in content.split('&').map((kvs) => kvs.split('=')))
+            Uri.decodeQueryComponent(kv[0], encoding: encoder):
+                Uri.decodeQueryComponent(kv[1], encoding: encoder)
+        };
         completer.complete(payload);
       });
     } else if (isMime('multipart/form-data', loose: true)) {

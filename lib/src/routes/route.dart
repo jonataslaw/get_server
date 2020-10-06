@@ -165,7 +165,7 @@ class Route {
     } else if (widget is HtmlText) {
       request.response.sendHtmlText(widget.data);
     } else if (widget is WidgetBuilder) {
-      widget.builder?.call(BuildContext(request, socketStream));
+      await widget.builder?.call(BuildContext(request, socketStream));
     } else if (widget is GetWidget) {
       final wid = await widget.build(BuildContext(request, socketStream));
       _sendResponse(wid, request);
@@ -180,9 +180,7 @@ class Route {
     bool strict = false,
   }) {
     String stringPath = path;
-    if (keys == null) {
-      keys = [];
-    }
+    keys ??= [];
     if (path is RegExp) {
       return {'regexp': path, 'keys': keys};
     } else if (path is List) {

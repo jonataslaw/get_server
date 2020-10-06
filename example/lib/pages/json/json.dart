@@ -4,7 +4,7 @@ class JsonPage extends GetView {
   @override
   Widget build(BuildContext context) {
     return Json({
-      "fruits": ["banana", "apple", "orange"]
+      'fruits': ['banana', 'apple', 'orange']
     });
   }
 }

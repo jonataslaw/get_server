@@ -3,6 +3,7 @@ abstract class IUserProvider {
 }
 
 class UserProvider extends IUserProvider {
+  @override
   Map<String, dynamic> getUser(String name) {
     if (name.toLowerCase() == 'pedro') {
       return {

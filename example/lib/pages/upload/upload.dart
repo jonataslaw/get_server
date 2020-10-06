@@ -4,7 +4,7 @@ class UploadPage extends GetView {
   @override
   Future<Widget> build(BuildContext context) async {
     final upload = await context.file('file');
-    print("File received: ${upload.name}");
+    print('File received: ${upload.name}');
     return Json(upload);
   }
 }

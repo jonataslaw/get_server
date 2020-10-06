@@ -128,7 +128,7 @@ class GetServer {
       if (cors) {
         addCorsHeaders(req.response);
         if (req.method.toLowerCase() == 'options') {
-          var msg = {"status": "ok"};
+          var msg = {'status': 'ok'};
           req.response.write(json.encode(msg));
           req.response.close();
         }
@@ -157,27 +157,27 @@ class GetServer {
     return this;
   }
 
-  void get(String path, FutureOr build(BuildContext context),
+  void get(String path, FutureOr Function(BuildContext context) build,
       {List<String> keys}) {
     _routes.add(Route(Method.get, path, build, keys: keys));
   }
 
-  void post(String path, FutureOr build(BuildContext context),
+  void post(String path, FutureOr Function(BuildContext context) build,
       {List<String> keys}) {
     _routes.add(Route(Method.post, path, build, keys: keys));
   }
 
-  void delete(String path, FutureOr build(BuildContext context),
+  void delete(String path, FutureOr Function(BuildContext context) build,
       {List<String> keys}) {
     _routes.add(Route(Method.delete, path, build, keys: keys));
   }
 
-  void put(String path, FutureOr build(BuildContext context),
+  void put(String path, FutureOr Function(BuildContext context) build,
       {List<String> keys}) {
     _routes.add(Route(Method.put, path, build, keys: keys));
   }
 
-  void ws(String path, FutureOr build(BuildContext context),
+  void ws(String path, FutureOr Function(BuildContext context) build,
       {List<String> keys}) {
     _routes.add(Route(Method.ws, path, build, keys: keys));
   }
@@ -234,7 +234,7 @@ class Json extends Widget<dynamic> {
 
 class WidgetBuilder extends Widget {
   final BuildContext context;
-  final Future Function(BuildContext) builder;
+  final FutureOr Function(BuildContext) builder;
   WidgetBuilder(this.context, {@required this.builder});
 }
 

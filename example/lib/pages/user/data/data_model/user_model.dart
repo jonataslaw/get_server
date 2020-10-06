@@ -22,16 +22,16 @@ class User {
   String toRawJson() => json.encode(toJson());
 
   factory User.fromJson(Map<String, dynamic> json) => User(
-        name: json["name"],
-        age: json["age"],
-        country: json["Country"],
-        error: json["Error"],
+        name: json['name'],
+        age: json['age'],
+        country: json['Country'],
+        error: json['Error'],
       );
 
   Map<String, dynamic> toJson() => {
-        "name": name,
-        "age": age,
-        "Country": country,
-        "Error": error,
+        'name': name,
+        'age': age,
+        'Country': country,
+        'Error': error,
       };
 }

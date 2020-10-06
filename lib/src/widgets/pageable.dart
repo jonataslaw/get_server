@@ -10,9 +10,9 @@ class Pageable extends GetWidget {
 
   @override
   Widget build(BuildContext context) {
-    String pageparam = context.param('page');
+    var pageparam = context.param('page');
     if (pageparam != null) {
-      int _page = int.parse(pageparam, onError: (_) => null);
+      var _page = int.parse(pageparam, onError: (_) => null);
       if (_page == null) {
         context.response.status(HttpStatus.badRequest).sendJson(_Erro(
             errocode: HttpStatus.badRequest,
@@ -23,9 +23,9 @@ class Pageable extends GetWidget {
       page = _page;
     }
 
-    String sizeparam = context.param('size');
+    var sizeparam = context.param('size');
     if (sizeparam != null) {
-      int _size = int.parse(sizeparam, onError: (_) => null);
+      var _size = int.parse(sizeparam, onError: (_) => null);
       if (_size == null) {
         context.response.status(HttpStatus.badRequest).sendJson(_Erro(
             errocode: HttpStatus.badRequest,
@@ -39,7 +39,7 @@ class Pageable extends GetWidget {
     final fistElement = (page - 1) * size;
     final lastElement = page * size;
 
-    int totalPages = (list.length / size).ceil();
+    var totalPages = (list.length / size).ceil();
     totalPages = totalPages == 0 ? 1 : totalPages;
 
     if (totalPages < page) {
@@ -105,9 +105,9 @@ class _Erro {
   _Erro({this.errocode, this.description});
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['errocode'] = this.errocode;
-    data['description'] = this.description;
+    final data = <String, dynamic>{};
+    data['errocode'] = errocode;
+    data['description'] = description;
     return data;
   }
 }

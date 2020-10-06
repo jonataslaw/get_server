@@ -7,7 +7,7 @@ class UserController extends GetxController {
   UserController({this.repository});
 
   User getUser(ContextRequest req) {
-    String name = req.params['name'];
+    var name = req.params['name'];
     return repository.fetchUser(name);
   }
 }
