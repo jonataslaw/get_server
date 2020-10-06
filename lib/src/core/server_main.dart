@@ -97,9 +97,16 @@ class GetServer {
       }
       context.usePrivateKey(File(privateKey).path, password: password);
       return HttpServer.bindSecure(host, port, context, shared: shared)
-          .then(_configure);
+          .then(_configure)
+          .catchError((err) {
+        Get.log(err?.toString(), isError: true);
+      });
     }
-    return HttpServer.bind(host, port, shared: shared).then(_configure);
+    return HttpServer.bind(host, port, shared: shared)
+        .then(_configure)
+        .catchError((err) {
+      Get.log(err?.toString(), isError: true);
+    });
   }
 
   void addCorsHeaders(HttpResponse response) {

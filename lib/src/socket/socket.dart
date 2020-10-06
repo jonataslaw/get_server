@@ -31,8 +31,8 @@ class SocketMessage {
 class GetSocket implements WebSocketBase {
   final WebSocket _ws;
   final _messageController = StreamController(),
-      _openController = StreamController(),
-      _closeController = StreamController();
+      _openController = StreamController<WebSocket>(),
+      _closeController = StreamController<String>();
 
   final Map<String, List<WebSocket>> rooms;
 
@@ -44,7 +44,7 @@ class GetSocket implements WebSocketBase {
     _openController.add(_ws);
 
     _ws.listen(_messageController.add, onError: (err) {
-      _closeController.add(err);
+      _closeController.add(err.toString());
     }, onDone: () {
       _closeController.add('Connection closed');
     });
@@ -102,10 +102,10 @@ class GetSocket implements WebSocketBase {
   Stream get onMessage => _messages;
 
   ///Listen socket open
-  Stream get onOpen => _openController.stream;
+  Stream<WebSocket> get onOpen => _openController.stream;
 
   ///Listen socket close
-  Stream get onClose => _closeController.stream;
+  Stream<String> get onClose => _closeController.stream;
 
   @override
   void close([int status, String reason]) {
