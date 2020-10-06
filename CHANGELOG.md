@@ -1,6 +1,9 @@
+# [0.7.1] 
+* Added linter
+
 # [0.7.0] 
 * Added jwt auth
-* 
+  
 # [0.6.5] 
 * Improve Widget three
 
