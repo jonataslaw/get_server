@@ -13,6 +13,15 @@ abstract class TokenUtil {
     }
   }
 
+  static JwtClaim getClaims(String token) {
+    try {
+      var key = getJwtKey();
+      return verifyJwtHS256Signature(token, key);
+    } catch (err) {
+      rethrow;
+    }
+  }
+
   static String getJwtKey() {
     var key = Get.find<String>(tag: 'jwtKey');
     return key;
