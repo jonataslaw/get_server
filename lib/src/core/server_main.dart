@@ -75,6 +75,8 @@ class GetServer {
 
   Future<GetServer> start() {
     if (getPages != null) {
+      if (jwtKey != null) TokenUtil.saveJwtKey(jwtKey);
+
       getPages.forEach((route) {
         _routes.add(
           Route(
@@ -84,7 +86,6 @@ class GetServer {
             binding: route.binding,
             keys: route.keys,
             needAuth: route.needAuth,
-            jwtKey: jwtKey,
           ),
         );
       });

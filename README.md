@@ -112,13 +112,12 @@ void main() {
 Second, retrieve your token:
 ```dart
 final claimSet = JwtClaim(
-  maxAge: const Duration(minutes: 5),
   expiry: DateTime.now().add(Duration(days: 3)),
   issuer: 'get is awesome',
   issuedAt: DateTime.now(),
 );
 
-var token = TokenUtil.generateToken(claim: claimSet, jwtKey: 'your key here');
+var token = TokenUtil.generateToken(claim: claimSet);
 ```
 and finally just flag your routes that need the token to work:
 ```dart

@@ -10,6 +10,6 @@ class AuthController extends GetxController {
       issuedAt: DateTime.now(),
     );
 
-    return TokenUtil.generateToken(claim: claimSet, jwtKey: 'S3CR3T');
+    return TokenUtil.generateToken(claim: claimSet);
   }
 }
