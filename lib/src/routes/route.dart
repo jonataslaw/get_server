@@ -79,9 +79,7 @@ class BuildContext {
 
 String enumValueToString(Object o) => o.toString().split('.').last;
 
-extension Soc on WebSocket{
-
-}
+extension Soc on WebSocket {}
 
 class Route {
   final _socketController = StreamController<HttpRequest>();
@@ -153,7 +151,10 @@ class Route {
           _sendResponse(widget, request);
         } else {
           request.response.status(401);
-          _sendResponse(Text('401 UNAUTHORIZED\n$message'), request);
+          _sendResponse(
+            Json({'success': false, 'data': null, 'error': message}),
+            request,
+          );
         }
       } else {
         _sendResponse(widget, request);
