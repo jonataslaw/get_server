@@ -29,6 +29,25 @@ Future<GetServer> runApp(GetServer server) {
   return server.start();
 }
 
+class Public {
+  final String folder;
+  // final String path;
+  final bool allowDirectoryListing;
+  final bool followLinks;
+  final bool jailRoot;
+
+  Public(
+    this.folder, {
+
+    /// awaiting dart lang solution
+    /// https://github.com/dart-lang/http_server/issues/81
+    // this.path = '/',
+    this.allowDirectoryListing = true,
+    this.followLinks = false,
+    this.jailRoot = true,
+  });
+}
+
 class GetServer {
   final LogWriterCallback log;
   final List<GetPage> getPages;
@@ -45,6 +64,7 @@ class GetServer {
   final String jwtKey;
   HttpServer _server;
   VirtualDirectory _staticServer;
+  final Public public;
 
   GetServer({
     this.host = '127.0.0.1',
@@ -60,6 +80,7 @@ class GetServer {
     this.initialBinding,
     this.useLog = true,
     this.jwtKey,
+    this.public,
   }) {
     if (log != null) {
       Get.log = log;
@@ -118,7 +139,6 @@ class GetServer {
   }
 
   FutureOr<GetServer> _configure(HttpServer httpServer) {
-    _server = httpServer;
     httpServer.listen((req) {
       if (useLog) Get.log('Method ${req.method} on ${req.uri}');
       var route =
@@ -133,21 +153,29 @@ class GetServer {
           req.response.close();
         }
       }
-
       if (route != null) {
         route.handle(req);
-      } else if (_staticServer != null) {
-        _staticServer.serveRequest(req);
       } else {
-        if (onNotFound != null) {
-          route = Route(
-            Method.get,
-            req.uri.toString(),
-            onNotFound.build,
-          );
-          route.handle(req, status: HttpStatus.notFound);
+        /// TODO: IMPROVE IT, The public folder is being called every
+        /// time a route is not found.If this is removed from here,
+        /// it will not load files that depend on the folder.
+        if (public != null) {
+          _staticServer ??= VirtualDirectory(
+            public.folder,
+            // pathPrefix: public.path,
+          )
+            ..allowDirectoryListing = public.allowDirectoryListing
+            ..jailRoot = public.jailRoot
+            ..followLinks = public.followLinks
+            ..errorPageHandler = _onNotFound
+            ..directoryHandler = (Directory dir, HttpRequest req) {
+              var indexUri = Uri.file(dir.path).resolve('index.html');
+              _staticServer.serveFile(File(indexUri.toFilePath()), req);
+            };
+
+          _staticServer.serveRequest(req);
         } else {
-          pageNotFound(req);
+          _onNotFound(req);
         }
       }
     });
@@ -155,6 +183,18 @@ class GetServer {
     Get.log('Server started on $host:$port');
 
     return this;
+  }
+
+  void _onNotFound(HttpRequest req) {
+    if (onNotFound != null) {
+      Route(
+        Method.get,
+        req.uri.toString(),
+        onNotFound.build,
+      ).handle(req, status: HttpStatus.notFound);
+    } else {
+      pageNotFound(req);
+    }
   }
 
   void get(String path, FutureOr Function(BuildContext context) build,

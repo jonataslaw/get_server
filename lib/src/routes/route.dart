@@ -79,9 +79,7 @@ class BuildContext {
 
 String enumValueToString(Object o) => o.toString().split('.').last;
 
-extension Soc on WebSocket{
-
-}
+extension Soc on WebSocket {}
 
 class Route {
   final _socketController = StreamController<HttpRequest>();

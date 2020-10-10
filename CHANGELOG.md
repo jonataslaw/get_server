@@ -1,3 +1,12 @@
+# [0.8.3] 
+* Improve open files from directory
+
+# [0.8.1] 
+* Allow file list others files from directory
+
+# [0.8.0] 
+* Added static files
+
 # [0.7.2] 
 * Improve onClose from websockets
 

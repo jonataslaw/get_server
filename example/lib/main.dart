@@ -6,6 +6,7 @@ void main() {
     GetServer(
       getPages: AppPages.routes,
       jwtKey: 'S3CR3T',
+      public: Public('example/web'),
     ),
   );
 }

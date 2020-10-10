@@ -13,13 +13,38 @@ part 'app_routes.dart';
 
 abstract class AppPages {
   static final routes = [
-    GetPage(name: Routes.HOME, page: () => HomePage()),
-    GetPage(name: Routes.USER, page: () => UserPage(), binding: UserBinding()),
-    GetPage(name: Routes.LANDING, page: () => HtmlPage()),
-    GetPage(name: '/pageable', page: () => PageablePage()),
-    GetPage(name: Routes.UPLOAD, page: () => UploadPage(), method: Method.post),
-    GetPage(name: Routes.SOCKET, page: () => SocketPage(), method: Method.ws),
-    GetPage(name: Routes.FRUITS, page: () => JsonPage(), needAuth: true),
+    // GetPage(
+    //   name: Routes.HOME,
+    //   page: () => HomePage(),
+    // ),
+    GetPage(
+      name: Routes.USER,
+      page: () => UserPage(),
+      binding: UserBinding(),
+    ),
+    GetPage(
+      name: Routes.LANDING,
+      page: () => HtmlPage(),
+    ),
+    GetPage(
+      name: '/pageable',
+      page: () => PageablePage(),
+    ),
+    GetPage(
+      name: Routes.UPLOAD,
+      page: () => UploadPage(),
+      method: Method.post,
+    ),
+    GetPage(
+      name: Routes.SOCKET,
+      page: () => SocketPage(),
+      method: Method.ws,
+    ),
+    GetPage(
+      name: Routes.FRUITS,
+      page: () => JsonPage(),
+      needAuth: true,
+    ),
     GetPage(
       name: Routes.AUTH,
       page: () => AuthPage(),
