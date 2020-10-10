@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:get_instance/get_instance.dart';
+import 'package:get_server/get_server.dart';
 import 'package:get_server/src/core/server_main.dart';
 import 'package:jaguar_jwt/jaguar_jwt.dart';
 
@@ -89,7 +90,6 @@ class Route {
   final Map _path;
   final Bindings binding;
   final bool _needAuth;
-  final String _jwtKey;
   FutureOr<Widget> Function(BuildContext context) _call;
 
   Route(
@@ -103,7 +103,6 @@ class Route {
     Map<String, List<WebSocket>> rooms,
   })  : _method = method,
         _needAuth = needAuth,
-        _jwtKey = jwtKey,
         _path = _normalize(path, keys: keys) {
     if (_method == Method.ws) {
       socketStream =
@@ -146,12 +145,15 @@ class Route {
       }
 
       if (_needAuth) {
-        var message = _authHandler(request, _jwtKey);
+        var message = _authHandler(request);
         if (message == null) {
           _sendResponse(widget, request);
         } else {
           request.response.status(401);
-          _sendResponse(Text('401 UNAUTHORIZED\n$message'), request);
+          _sendResponse(
+            Json({'success': false, 'data': null, 'error': message}),
+            request,
+          );
         }
       } else {
         _sendResponse(widget, request);
@@ -233,7 +235,7 @@ class Route {
     return params;
   }
 
-  String _authHandler(ContextRequest req, String jwtKey) {
+  String _authHandler(ContextRequest req) {
     dynamic token = req.header('Authorization');
     try {
       if (token != null) {
@@ -241,7 +243,8 @@ class Route {
         if (token.contains('Bearer')) {
           token = token.replaceAll('Bearer ', '');
 
-          var decClaimSet = verifyJwtHS256Signature(token, jwtKey);
+          var key = TokenUtil.getJwtKey();
+          var decClaimSet = verifyJwtHS256Signature(token, key);
           if (decClaimSet.expiry.isBefore(DateTime.now())) {
             return JwtException.tokenExpired.message;
           }
