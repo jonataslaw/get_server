@@ -1,3 +1,6 @@
+# [0.9.1] 
+* Prevent errors on Socket.leave(room) 
+
 # [0.9.0] 
 * Added on to sockets
 * Improve socket performance to requests 
