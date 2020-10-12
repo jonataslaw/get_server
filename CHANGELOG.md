@@ -1,3 +1,6 @@
+# [0.10.1] 
+* Expose socket class
+
 # [0.10.0] 
 * Added getSocketById
 * Added Socket.broadcast
