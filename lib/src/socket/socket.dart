@@ -65,9 +65,6 @@ class SocketNotifier {
     for (var item in _onCloses) {
       item(err);
     }
-    _onCloses = null;
-    _onErrors = null;
-    _onEvents = null;
   }
 
   void notifyError(Close err) {
@@ -93,21 +90,36 @@ class SocketNotifier {
   void dispose() {
     _onMessages = null;
     _onEvents = null;
+    _onCloses = null;
+    _onErrors = null;
+  }
+}
+
+extension Idd on WebSocket {
+  int get id => hashCode;
+
+  void emit(String event, Object data) {
+    add({'type': event, 'data': data});
   }
 }
 
 class GetSocket implements WebSocketBase {
   final WebSocket _ws;
   final Map<String, HashSet<WebSocket>> rooms;
+  final HashSet<GetSocket> sockets;
   SocketNotifier socketNotifier = SocketNotifier();
   bool isDisposed = false;
 
-  GetSocket(this._ws, this.rooms) {
+  GetSocket(this._ws, this.rooms, this.sockets) {
+    sockets.add(this);
     _ws.listen((data) {
       socketNotifier.notifyData(data);
     }, onError: (err) {
+      //sockets.remove(_ws);
       socketNotifier.notifyError(Close(_ws, err.toString(), 0));
+      close();
     }, onDone: () {
+      sockets.remove(this);
       rooms.removeWhere((key, value) => value.contains(_ws));
       socketNotifier.notifyClose(Close(_ws, 'Connection closed', 1), _ws);
       socketNotifier.dispose();
@@ -122,10 +134,38 @@ class GetSocket implements WebSocketBase {
     _ws.add(message);
   }
 
-  // TODO: Improve it
+  int get id => _ws.hashCode;
+
+  int get length => sockets.length;
+
+  GetSocket getSocketById(int id) {
+    return sockets.firstWhere((element) => element.id == id,
+        orElse: () => null);
+  }
+
+  void broadcast(Object message) {
+    if (sockets.contains(_ws)) {
+      sockets.forEach((element) {
+        if (element != this) {
+          element.send(message);
+        }
+      });
+    }
+  }
+
+  void broadcastEvent(String event, Object data) {
+    if (sockets.contains(_ws)) {
+      sockets.forEach((element) {
+        if (element != this) {
+          element.emit(event, data);
+        }
+      });
+    }
+  }
+
   void sendToRoom(String room, Object message) {
     _checkAvailable();
-    if (rooms.containsKey(room)) {
+    if (rooms.containsKey(room) && rooms.containsValue(_ws)) {
       rooms[room].forEach((element) {
         element.add(message);
       });
@@ -136,7 +176,6 @@ class GetSocket implements WebSocketBase {
     if (isDisposed) throw 'Cannot add events to closed Socket';
   }
 
-  // TODO: Improve it
   void broadcastToRoom(String room, Object message) {
     _checkAvailable();
     if (rooms.containsKey(room)) {

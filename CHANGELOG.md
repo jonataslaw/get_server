@@ -1,3 +1,9 @@
+# [0.10.0] 
+* Added getSocketById
+* Added Socket.broadcast
+* Added Socket.id 
+* Added Sockets.lenght
+  
 # [0.9.1] 
 * Prevent errors on Socket.leave(room) 
 

@@ -81,17 +81,15 @@ class BuildContext {
 
 String enumValueToString(Object o) => o.toString().split('.').last;
 
-extension Soc on WebSocket {}
-
 class Route {
   final _socketController = StreamController<HttpRequest>();
-  // Stream<ContextRequest> requestStream;
   Stream<GetSocket> socketStream;
   final Method _method;
   final Map _path;
   final Bindings binding;
   final bool _needAuth;
-  final rooms = <String, HashSet<WebSocket>>{};
+  final Map<String, HashSet<WebSocket>> _rooms;
+  final HashSet<GetSocket> _sockets;
   FutureOr<Widget> Function(BuildContext context) _call;
 
   Route(
@@ -103,13 +101,13 @@ class Route {
     bool needAuth = false,
   })  : _method = method,
         _needAuth = needAuth,
+        _rooms = (method == Method.ws ? <String, HashSet<WebSocket>>{} : null),
+        _sockets = (method == Method.ws ? HashSet<GetSocket>() : null),
         _path = _normalize(path, keys: keys) {
     if (_method == Method.ws) {
-      socketStream = _socketController.stream
-          .asBroadcastStream()
-          .transform(WebSocketTransformer())
-          .map((ws) {
-        return GetSocket(ws, rooms);
+      socketStream =
+          _socketController.stream.transform(WebSocketTransformer()).map((ws) {
+        return GetSocket(ws, _rooms, _sockets);
       });
 
       final context = BuildContext(null, socketStream);
