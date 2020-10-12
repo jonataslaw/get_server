@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 import 'package:get_instance/get_instance.dart';
@@ -90,6 +91,7 @@ class Route {
   final Map _path;
   final Bindings binding;
   final bool _needAuth;
+  final rooms = <String, HashSet<WebSocket>>{};
   FutureOr<Widget> Function(BuildContext context) _call;
 
   Route(
@@ -99,14 +101,14 @@ class Route {
     this.binding,
     List<String> keys,
     bool needAuth = false,
-    String jwtKey,
-    Map<String, List<WebSocket>> rooms,
   })  : _method = method,
         _needAuth = needAuth,
         _path = _normalize(path, keys: keys) {
     if (_method == Method.ws) {
-      socketStream =
-          _socketController.stream.transform(WebSocketTransformer()).map((ws) {
+      socketStream = _socketController.stream
+          .asBroadcastStream()
+          .transform(WebSocketTransformer())
+          .map((ws) {
         return GetSocket(ws, rooms);
       });
 

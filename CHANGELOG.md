@@ -1,3 +1,17 @@
+# [0.9.0] 
+* Added on to sockets
+* Improve socket performance to requests 
+* Remove "listen" sintaxe from sockets. 
+* Alert to BREAKING CHANGES:
+Before: socket.onMessage.listen()
+Now: socket.onMessage()
+
+Before: socket.onClose.listen()
+Now: socket.onClose() 
+
+Before: socket.onOpen.listen()
+Now: socket.onOpen()
+  
 # [0.8.3] 
 * Improve open files from directory
 

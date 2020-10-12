@@ -64,9 +64,23 @@ class Home extends GetView {
 }
 ```
 
-Ok, you created your project with Flutter web, and you have no idea how to host it on a VPS, would it be possible to create the API for your application, and use the same GetX to display the HTML page?
+Ok, you created your project with Flutter web, and you have no idea how to host it on a VPS, would it be possible to create the API for your application, and use the same GetX to display the Flutter web project?
+Yep. You need only copy your web folder from Flutter project, and paste on directory 
+from server file. 
+Flutter web generates an html file that calls a js file, which in turn requests several files that must be in a public folder. To make the Flutter web folder a public folder, just add it to your GetServer. That way when you enter your server, you will automatically be directed to the generator site with Flutter.
 
-You just need to copy your Flutter web page and place it in your web project:
+```dart
+void main() {
+  runApp(GetServer(
+    public: Public('web'), // turn web folder public
+    getPages: [
+      GetPage(name: '/api', page:()=> HomeApi()),
+    ],   
+  ));
+}
+```
+
+If you have an html that does not call files from the server, but only external files, you can use the Html widget for a specific path.
 
 ```dart
 class Home extends GetView {
@@ -138,21 +152,26 @@ class SocketPage extends GetView {
   @override
   Widget build(BuildContext context) {
     return Socket(context, builder: (socket) {
-      socket.onMessage.listen((data) {
-        print('data: $data');
-        socket.send(data);
+    
+      socket.onMessage((data) { // message based
+        socket.send(data); // echo
       });
 
-      socket.onOpen.listen((ws) {
-        print('new socket opened');
+      socket.on('join', (val) { // event based
+        socket.join(val); // join to group
       });
 
-      socket.onClose.listen((ws) {
-        print('socket has been closed');
+      socket.onOpen((ws) {
+        print('new socket opened'); // called when socket is open
+      });
+
+      socket.onClose((ws) {
+        print('socket has been closed. Motivo: ${ws.message}');
       });
     });
   }
 }
+
 ```
 
 Dart is not popular for servers, however, attracting people who already program in Flutter to the backend is now also a mission of GetX. Transforming one-dimensional programmers into full stack developers with 0% learning curve, and reusing code is also one of GetX's goals, and I hope you will help us on this journey.
@@ -167,15 +186,15 @@ void main() {
   app.get('/', (res) => res.send('Get_server of javascript way'));
   app.ws('/socket', (res) {
     res.ws.listen((socket) {
-      socket.onMessage.listen((data) {
+      socket.onMessage((data) {
         print('data: $data');
       });
 
-      socket.onOpen.listen((ws) {
+      socket.onOpen((ws) {
         print('new socket opened');
       });
 
-      socket.onClose.listen((ws) {
+      socket.onClose((ws) {
         print('socket has been closed');
       });
     });

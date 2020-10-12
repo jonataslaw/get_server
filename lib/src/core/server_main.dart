@@ -92,8 +92,6 @@ class GetServer {
 
   void stop() => _server.close();
 
-  final Map<String, List<WebSocket>> rooms = <String, List<WebSocket>>{};
-
   Future<GetServer> start() {
     if (getPages != null) {
       if (jwtKey != null) TokenUtil.saveJwtKey(jwtKey);

@@ -1,7 +1,7 @@
 import 'package:get_server/get_server.dart';
 import '../pages/auth/bindings/auth_binding.dart';
 import '../pages/auth/view/auth.dart';
-import '../pages/home/home.dart';
+// import '../pages/home/home.dart';
 import '../pages/html/html.dart';
 import '../pages/json/json.dart';
 import '../pages/pageable/pageable.dart';
