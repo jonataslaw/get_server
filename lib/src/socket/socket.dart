@@ -168,7 +168,7 @@ class GetSocket implements WebSocketBase {
   @override
   void leave(String room) {
     _checkAvailable();
-    if (room.contains(room)) {
+    if (rooms.containsKey(room)) {
       rooms[room].remove(_ws);
     } else {
       Get.log("Room $room don't exists");
