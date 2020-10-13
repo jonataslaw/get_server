@@ -1,3 +1,15 @@
+# [0.10.1] 
+* Expose socket class
+
+# [0.10.0] 
+* Added getSocketById
+* Added Socket.broadcast
+* Added Socket.id 
+* Added Sockets.lenght
+  
+# [0.9.1] 
+* Prevent errors on Socket.leave(room) 
+
 # [0.9.0] 
 * Added on to sockets
 * Improve socket performance to requests 

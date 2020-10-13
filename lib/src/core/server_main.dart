@@ -63,7 +63,7 @@ class GetServer {
   final bool useLog;
   final String jwtKey;
   HttpServer _server;
-  VirtualDirectory _staticServer;
+  VirtualDirectory _virtualDirectory;
   final Public public;
 
   GetServer({
@@ -155,11 +155,9 @@ class GetServer {
       if (route != null) {
         route.handle(req);
       } else {
-        /// TODO: IMPROVE IT, The public folder is being called every
-        /// time a route is not found.If this is removed from here,
-        /// it will not load files that depend on the folder.
+        /// TODO: Check if issue from VirtualDirectory with custom path was resolved
         if (public != null) {
-          _staticServer ??= VirtualDirectory(
+          _virtualDirectory ??= VirtualDirectory(
             public.folder,
             // pathPrefix: public.path,
           )
@@ -169,10 +167,10 @@ class GetServer {
             ..errorPageHandler = _onNotFound
             ..directoryHandler = (Directory dir, HttpRequest req) {
               var indexUri = Uri.file(dir.path).resolve('index.html');
-              _staticServer.serveFile(File(indexUri.toFilePath()), req);
+              _virtualDirectory.serveFile(File(indexUri.toFilePath()), req);
             };
 
-          _staticServer.serveRequest(req);
+          _virtualDirectory.serveRequest(req);
         } else {
           _onNotFound(req);
         }
