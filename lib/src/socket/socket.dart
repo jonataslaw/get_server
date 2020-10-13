@@ -144,7 +144,7 @@ class GetSocket implements WebSocketBase {
   }
 
   void broadcast(Object message) {
-    if (sockets.contains(_ws)) {
+    if (sockets.contains(this)) {
       sockets.forEach((element) {
         if (element != this) {
           element.send(message);
@@ -154,7 +154,7 @@ class GetSocket implements WebSocketBase {
   }
 
   void broadcastEvent(String event, Object data) {
-    if (sockets.contains(_ws)) {
+    if (sockets.contains(this)) {
       sockets.forEach((element) {
         if (element != this) {
           element.emit(event, data);
