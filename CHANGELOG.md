@@ -1,3 +1,6 @@
+# [0.10.2] 
+* Fix Socket.broadcast and Socket.broadcastToRoom
+  
 # [0.10.1] 
 * Expose socket class
 
