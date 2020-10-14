@@ -1,3 +1,8 @@
+# [0.10.3] 
+* Fix sendToRoom
+* Clean Structure
+* Improve performance from Sockets requests
+  
 # [0.10.2] 
 * Fix Socket.broadcast and Socket.broadcastToRoom
   

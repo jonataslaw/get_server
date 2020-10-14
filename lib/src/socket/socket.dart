@@ -115,7 +115,6 @@ class GetSocket implements WebSocketBase {
     _ws.listen((data) {
       socketNotifier.notifyData(data);
     }, onError: (err) {
-      //sockets.remove(_ws);
       socketNotifier.notifyError(Close(_ws, err.toString(), 0));
       close();
     }, onDone: () {
@@ -165,10 +164,10 @@ class GetSocket implements WebSocketBase {
 
   void sendToRoom(String room, Object message) {
     _checkAvailable();
-    if (rooms.containsKey(room) && rooms.values.any((h) => h.contains(_ws))) {
-      rooms[room].forEach((element) {
+    if (rooms.containsKey(room) && rooms[room].contains(_ws)) {
+      for (var element in rooms[room]) {
         element.add(message);
-      });
+      }
     }
   }
 
@@ -178,12 +177,13 @@ class GetSocket implements WebSocketBase {
 
   void broadcastToRoom(String room, Object message) {
     _checkAvailable();
-    if (rooms.containsKey(room)) {
-      rooms[room].forEach((element) {
+
+    if (rooms.containsKey(room) && rooms[room].contains(_ws)) {
+      for (var element in rooms[room]) {
         if (element != _ws) {
           element.add(message);
         }
-      });
+      }
     }
   }
 
