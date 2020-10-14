@@ -165,7 +165,7 @@ class GetSocket implements WebSocketBase {
 
   void sendToRoom(String room, Object message) {
     _checkAvailable();
-    if (rooms.containsKey(room) && rooms.containsValue(_ws)) {
+    if (rooms.containsKey(room) && rooms.values.any((h) => h.contains(_ws))) {
       rooms[room].forEach((element) {
         element.add(message);
       });

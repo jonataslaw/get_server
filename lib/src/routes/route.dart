@@ -2,10 +2,12 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:get_instance/get_instance.dart';
 import 'package:get_server/get_server.dart';
 import 'package:get_server/src/core/server_main.dart';
 import 'package:jaguar_jwt/jaguar_jwt.dart';
+import 'package:meta/meta.dart';
 
 import '../context/context_request.dart';
 import '../context/context_response.dart';
@@ -105,19 +107,23 @@ class Route {
         _sockets = (method == Method.ws ? HashSet<GetSocket>() : null),
         _path = _normalize(path, keys: keys) {
     if (_method == Method.ws) {
-      socketStream =
-          _socketController.stream.transform(WebSocketTransformer()).map((ws) {
-        return GetSocket(ws, _rooms, _sockets);
-      });
-
-      final context = BuildContext(null, socketStream);
-      Socket socket = call(context);
-      context.ws.listen((event) {
-        socket.builder(event);
-      });
+      _setupWs(call);
     } else {
       _call = call;
     }
+  }
+
+  void _setupWs(Function(BuildContext context) call) {
+    socketStream =
+        _socketController.stream.transform(WebSocketTransformer()).map((ws) {
+      return GetSocket(ws, _rooms, _sockets);
+    });
+
+    final context = BuildContext(null, socketStream);
+    Socket socket = call(context);
+    context.ws.listen((event) {
+      socket.builder(event);
+    });
   }
 
   bool match(HttpRequest req) {
@@ -128,7 +134,13 @@ class Route {
 
   Future<void> handle(HttpRequest req, {int status}) async {
     if (_method == Method.ws) {
-      _socketController.add(req);
+      var request = ContextRequest(req);
+      request.response = ContextResponse(req.response);
+
+      _verifyAuth(
+        req: request,
+        successCallback: () => _socketController.add(req),
+      );
     } else {
       var request = ContextRequest(req);
       request.params = _parseParams(req.uri.path, _path);
@@ -144,20 +156,10 @@ class Route {
         widget = prepareWidget;
       }
 
-      if (_needAuth) {
-        var message = _authHandler(request);
-        if (message == null) {
-          _sendResponse(widget, request);
-        } else {
-          request.response.status(401);
-          _sendResponse(
-            Json({'success': false, 'data': null, 'error': message}),
-            request,
-          );
-        }
-      } else {
-        _sendResponse(widget, request);
-      }
+      _verifyAuth(
+        req: request,
+        successCallback: () => _sendResponse(widget, request),
+      );
     }
   }
 
@@ -259,6 +261,26 @@ class Route {
       return err.message;
     } catch (err) {
       return JwtException.invalidToken.message;
+    }
+  }
+
+  void _verifyAuth({
+    @required ContextRequest req,
+    @required void Function() successCallback,
+  }) {
+    if (_needAuth) {
+      var message = _authHandler(req);
+      if (message == null) {
+        successCallback();
+      } else {
+        req.response?.status(401);
+        _sendResponse(
+          Json({'success': false, 'data': null, 'error': message}),
+          req,
+        );
+      }
+    } else {
+      successCallback();
     }
   }
 }
