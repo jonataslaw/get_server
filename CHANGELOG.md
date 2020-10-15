@@ -1,3 +1,9 @@
+# [0.10.5] 
+* Fix Socket.emit
+  
+# [0.10.4] 
+* Improve websockets
+  
 # [0.10.3] 
 * Fix sendToRoom
 * Clean Structure

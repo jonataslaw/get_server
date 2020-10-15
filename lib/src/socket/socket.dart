@@ -133,6 +133,18 @@ class GetSocket implements WebSocketBase {
     _ws.add(message);
   }
 
+  final _value = <String, dynamic>{};
+
+  dynamic operator [](String key) {
+    return _value[key];
+  }
+
+  void operator []=(String key, dynamic value) {
+    _value[key] = value;
+  }
+
+  WebSocket get rawSocket => _ws;
+
   int get id => _ws.hashCode;
 
   int get length => sockets.length;
@@ -189,7 +201,7 @@ class GetSocket implements WebSocketBase {
 
   @override
   void emit(String event, Object data) {
-    send({'type': event, 'data': data});
+    send({'type': event, 'data': data}.toString());
   }
 
   @override

@@ -8,4 +8,5 @@ class Routes {
   static const LANDING = '/landing';
   static const UPLOAD = '/upload';
   static const SOCKET = '/socket';
+  static const PAGEABLE = '/pageable';
 }
