@@ -175,6 +175,8 @@ class GetServer {
           _onNotFound(req);
         }
       }
+    }, onError: (err) {
+      Get.log(err?.toString(), isError: true);
     });
 
     Get.log('Server started on $host:$port');

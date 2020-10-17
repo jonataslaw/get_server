@@ -26,7 +26,7 @@ enum Method {
 typedef Disposer = Function();
 
 class BuildContext {
-  BuildContext(this.request, this.socketStream);
+  BuildContext(this.request, {this.socketStream});
   ContextResponse get response => request.response;
   final ContextRequest request;
   final Stream<GetSocket> socketStream;
@@ -119,7 +119,7 @@ class Route {
       return GetSocket(ws, _rooms, _sockets);
     });
 
-    final context = BuildContext(null, socketStream);
+    final context = BuildContext(null, socketStream: socketStream);
     Socket socket = call(context);
     context.ws.listen((event) {
       socket.builder(event);
@@ -135,11 +135,14 @@ class Route {
   Future<void> handle(HttpRequest req, {int status}) async {
     if (_method == Method.ws) {
       var request = ContextRequest(req);
+      request.params = _parseParams(req.uri.path, _path);
       request.response = ContextResponse(req.response);
 
       _verifyAuth(
         req: request,
-        successCallback: () => _socketController.add(req),
+        successCallback: () {
+          _socketController.add(req);
+        },
       );
     } else {
       var request = ContextRequest(req);
@@ -148,7 +151,7 @@ class Route {
       if (status != null) request.response.status(status);
 
       Widget widget;
-      final prepareWidget = _call(BuildContext(request, socketStream));
+      final prepareWidget = _call(BuildContext(request));
 
       if (prepareWidget is Future) {
         widget = await prepareWidget;
@@ -173,9 +176,9 @@ class Route {
     } else if (widget is HtmlText) {
       request.response.sendHtmlText(widget.data);
     } else if (widget is WidgetBuilder) {
-      await widget.builder?.call(BuildContext(request, socketStream));
+      await widget.builder?.call(BuildContext(request));
     } else if (widget is GetWidget) {
-      final wid = await widget.build(BuildContext(request, socketStream));
+      final wid = await widget.build(BuildContext(request));
       _sendResponse(wid, request);
     } else {
       request.response.send(widget.data);

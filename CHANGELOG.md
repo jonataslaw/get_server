@@ -1,3 +1,6 @@
+# [0.10.6] 
+* Change "toString()" to "jsonEncode()" on socket.emit to avoid decode errors
+
 # [0.10.5] 
 * Fix Socket.emit
   

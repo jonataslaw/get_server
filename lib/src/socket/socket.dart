@@ -76,7 +76,7 @@ class SocketNotifier {
 
   void _tryOn(dynamic message) {
     try {
-      Map msg = jsonDecode(message);
+      Map<String, dynamic> msg = jsonDecode(message);
       final event = msg['type'];
       final data = msg['data'];
       if (_onEvents.containsKey(event)) {
@@ -99,7 +99,7 @@ extension Idd on WebSocket {
   int get id => hashCode;
 
   void emit(String event, Object data) {
-    add({'type': event, 'data': data});
+    add(jsonEncode({'type': event, 'data': data}));
   }
 }
 
@@ -128,7 +128,7 @@ class GetSocket implements WebSocketBase {
   }
 
   @override
-  void send(Object message) {
+  void send(dynamic message) {
     _checkAvailable();
     _ws.add(message);
   }
@@ -201,7 +201,7 @@ class GetSocket implements WebSocketBase {
 
   @override
   void emit(String event, Object data) {
-    send({'type': event, 'data': data}.toString());
+    send(jsonEncode({'type': event, 'data': data}));
   }
 
   @override
