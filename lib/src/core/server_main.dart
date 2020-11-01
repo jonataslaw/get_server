@@ -150,6 +150,7 @@ class GetServer {
           var msg = {'status': 'ok'};
           req.response.write(json.encode(msg));
           req.response.close();
+          return;
         }
       }
       if (route != null) {
