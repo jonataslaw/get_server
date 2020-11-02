@@ -7,4 +7,5 @@ export 'src/socket/socket.dart';
 export 'src/core/utils/token_util.dart';
 export 'src/infrastructure/getx_controller.dart';
 export 'src/routes/route.dart';
+export 'src/routes/get_page.dart';
 export 'src/widgets/pageable.dart';

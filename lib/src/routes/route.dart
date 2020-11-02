@@ -92,12 +92,12 @@ class Route {
   final bool _needAuth;
   final Map<String, HashSet<WebSocket>> _rooms;
   final HashSet<GetSocket> _sockets;
-  FutureOr<Widget> Function(BuildContext context) _call;
+  final WidgetCallback call;
 
   Route(
     Method method,
     dynamic path,
-    FutureOr<Widget> Function(BuildContext context) call, {
+    this.call, {
     this.binding,
     List<String> keys,
     bool needAuth = false,
@@ -107,13 +107,11 @@ class Route {
         _sockets = (method == Method.ws ? HashSet<GetSocket>() : null),
         _path = _normalize(path, keys: keys) {
     if (_method == Method.ws) {
-      _setupWs(call);
-    } else {
-      _call = call;
+      _setupWs();
     }
   }
 
-  void _setupWs(Function(BuildContext context) call) {
+  void _setupWs() {
     socketStream =
         _socketController.stream.transform(WebSocketTransformer()).map((ws) {
       return GetSocket(ws, _rooms, _sockets);
@@ -150,8 +148,10 @@ class Route {
       request.response = ContextResponse(req.response);
       if (status != null) request.response.status(status);
 
+      final context = BuildContext(request);
+
       Widget widget;
-      final prepareWidget = _call(BuildContext(request));
+      final prepareWidget = call(context);
 
       if (prepareWidget is Future) {
         widget = await prepareWidget;

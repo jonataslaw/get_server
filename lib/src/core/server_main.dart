@@ -1,29 +1,12 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
-import 'package:get_server/src/socket/socket.dart';
-import 'package:http_server/http_server.dart';
+import 'dart:isolate';
 import 'package:meta/meta.dart';
 import '../../get_server.dart';
 import '../routes/route.dart';
-
-class GetPage {
-  final Method method;
-  final String name;
-  final List<String> keys;
-  final GetView Function() page;
-  final Bindings binding;
-  final bool needAuth;
-
-  const GetPage({
-    this.method = Method.get,
-    this.name = '/',
-    this.page,
-    this.binding,
-    this.keys,
-    this.needAuth = false,
-  });
-}
+import 'node_mode_mixin.dart';
+import 'route_config.dart';
+import 'server_config.dart';
 
 Future<GetServer> runApp(GetServer server) {
   return server.start();
@@ -48,9 +31,11 @@ class Public {
   });
 }
 
-class GetServer {
-  final LogWriterCallback log;
+class GetServer with NodeMode {
+  HttpServer _server;
+
   final List<GetPage> getPages;
+  final LogWriterCallback log;
   final String host;
   final int port;
   final String certificateChain;
@@ -58,12 +43,9 @@ class GetServer {
   final String privateKey;
   final String password;
   final bool cors;
-  final List<Route> _routes = <Route>[];
   final GetView onNotFound;
   final bool useLog;
   final String jwtKey;
-  HttpServer _server;
-  VirtualDirectory _virtualDirectory;
   final Public public;
 
   GetServer({
@@ -72,7 +54,7 @@ class GetServer {
     this.certificateChain,
     this.privateKey,
     this.password,
-    this.shared = false,
+    this.shared = true,
     this.getPages,
     this.cors = false,
     this.log,
@@ -92,143 +74,47 @@ class GetServer {
 
   void stop() => _server.close();
 
-  Future<GetServer> start() {
+  Future<GetServer> start() async {
+    final cpus = Platform.numberOfProcessors;
+    Get.log('Starting server on ${host}:${port} using $cpus threads');
+
+    final serverConfig = ServerConfig(
+      log,
+      host,
+      port,
+      certificateChain,
+      shared,
+      privateKey,
+      password,
+      cors,
+      onNotFound,
+      useLog,
+      jwtKey,
+      public,
+      _server,
+    );
     if (getPages != null) {
-      if (jwtKey != null) TokenUtil.saveJwtKey(jwtKey);
-
-      getPages.forEach((route) {
-        _routes.add(
-          Route(
-            route.method,
-            route.name,
-            route?.page()?.build,
-            binding: route.binding,
-            keys: route.keys,
-            needAuth: route.needAuth,
-          ),
-        );
-      });
+      if (jwtKey != null) {
+        TokenUtil.saveJwtKey(jwtKey);
+      }
+      RouteConfig.i.addRoutes(getPages);
     }
 
-    if (privateKey != null) {
-      var context = SecurityContext();
-      if (certificateChain != null) {
-        context.useCertificateChain(File(certificateChain).path);
-      }
-      context.usePrivateKey(File(privateKey).path, password: password);
-      return HttpServer.bindSecure(host, port, context, shared: shared)
-          .then(_configure)
-          .catchError((err) {
-        Get.log(err?.toString(), isError: true);
-      });
+    final start = ServerStart.startServer;
+
+    for (var i = 0; i < cpus - 1; i++) {
+      // ignore: unawaited_futures
+      Isolate.spawn(start, serverConfig);
     }
-    return HttpServer.bind(host, port, shared: shared)
-        .then(_configure)
-        .catchError((err) {
-      Get.log(err?.toString(), isError: true);
-    });
-  }
 
-  void addCorsHeaders(HttpResponse response) {
-    response.headers.add('Access-Control-Allow-Origin', '*');
-    response.headers
-        .add('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE');
-    response.headers.add('Access-Control-Allow-Headers',
-        'access-control-allow-origin,content-type,x-access-token');
-  }
+    // ignore: unawaited_futures
+    start(serverConfig);
 
-  FutureOr<GetServer> _configure(HttpServer httpServer) {
-    httpServer.listen((req) {
-      if (useLog) Get.log('Method ${req.method} on ${req.uri}');
-      var route =
-          _routes.firstWhere((route) => route.match(req), orElse: () => null);
-
-      route?.binding?.dependencies();
-      if (cors) {
-        addCorsHeaders(req.response);
-        if (req.method.toLowerCase() == 'options') {
-          var msg = {'status': 'ok'};
-          req.response.write(json.encode(msg));
-          req.response.close();
-        }
-      }
-      if (route != null) {
-        route.handle(req);
-      } else {
-        /// TODO: Check if issue from VirtualDirectory with custom path was resolved
-        if (public != null) {
-          _virtualDirectory ??= VirtualDirectory(
-            public.folder,
-            // pathPrefix: public.path,
-          )
-            ..allowDirectoryListing = public.allowDirectoryListing
-            ..jailRoot = public.jailRoot
-            ..followLinks = public.followLinks
-            ..errorPageHandler = _onNotFound
-            ..directoryHandler = (Directory dir, HttpRequest req) {
-              var indexUri = Uri.file(dir.path).resolve('index.html');
-              _virtualDirectory.serveFile(File(indexUri.toFilePath()), req);
-            };
-
-          _virtualDirectory.serveRequest(req);
-        } else {
-          _onNotFound(req);
-        }
-      }
-    }, onError: (err) {
-      Get.log(err?.toString(), isError: true);
-    });
-
-    Get.log('Server started on $host:$port');
-
-    return this;
-  }
-
-  void _onNotFound(HttpRequest req) {
-    if (onNotFound != null) {
-      Route(
-        Method.get,
-        req.uri.toString(),
-        onNotFound.build,
-      ).handle(req, status: HttpStatus.notFound);
-    } else {
-      pageNotFound(req);
-    }
-  }
-
-  void get(String path, FutureOr Function(BuildContext context) build,
-      {List<String> keys}) {
-    _routes.add(Route(Method.get, path, build, keys: keys));
-  }
-
-  void post(String path, FutureOr Function(BuildContext context) build,
-      {List<String> keys}) {
-    _routes.add(Route(Method.post, path, build, keys: keys));
-  }
-
-  void delete(String path, FutureOr Function(BuildContext context) build,
-      {List<String> keys}) {
-    _routes.add(Route(Method.delete, path, build, keys: keys));
-  }
-
-  void put(String path, FutureOr Function(BuildContext context) build,
-      {List<String> keys}) {
-    _routes.add(Route(Method.put, path, build, keys: keys));
-  }
-
-  void ws(String path, FutureOr Function(BuildContext context) build,
-      {List<String> keys}) {
-    _routes.add(Route(Method.ws, path, build, keys: keys));
-  }
-
-  void pageNotFound(HttpRequest req) {
-    req.response
-      ..statusCode = HttpStatus.notFound
-      ..close();
+    await ProcessSignal.sigterm.watch().first;
+    return Future.value(this);
   }
 }
 
-// Suggestion, change that name to GetEndpoint
 abstract class GetView<T> {
   final String tag = null;
 
@@ -236,20 +122,33 @@ abstract class GetView<T> {
   FutureOr<Widget> build(BuildContext context);
 }
 
+abstract class GetEndpoint<T> {
+  final String tag = null;
+
+  T get controller => GetInstance().find<T>(tag: tag);
+  FutureOr<Widget> build(BuildContext context);
+}
+
+typedef WidgetCallback = FutureOr<Widget> Function(BuildContext context);
+
 abstract class Widget<T> {
   Widget({this.data});
   final T data;
 }
 
+class _Wrapper<T> {
+  T data;
+}
+
 //TODO: Change the name after
 abstract class GetWidget<T> extends Widget {
-  final Set<T> _value = <T>{};
+  final _value = _Wrapper<T>();
 
   final String tag = null;
 
   T get controller {
-    if (_value.isEmpty) _value.add(GetInstance().find<T>(tag: tag));
-    return _value.first;
+    _value.data ??= GetInstance().find<T>(tag: tag);
+    return _value.data;
   }
 
   FutureOr<Widget> build(BuildContext context);
