@@ -27,7 +27,7 @@ abstract class AppPages {
       page: () => HtmlPage(),
     ),
     GetPage(
-      name: '/pageable',
+      name: Routes.PAGEABLE,
       page: () => PageablePage(),
     ),
     GetPage(

@@ -2,10 +2,12 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:get_instance/get_instance.dart';
 import 'package:get_server/get_server.dart';
 import 'package:get_server/src/core/server_main.dart';
 import 'package:jaguar_jwt/jaguar_jwt.dart';
+import 'package:meta/meta.dart';
 
 import '../context/context_request.dart';
 import '../context/context_response.dart';
@@ -24,7 +26,7 @@ enum Method {
 typedef Disposer = Function();
 
 class BuildContext {
-  BuildContext(this.request, this.socketStream);
+  BuildContext(this.request, {this.socketStream});
   ContextResponse get response => request.response;
   final ContextRequest request;
   final Stream<GetSocket> socketStream;
@@ -90,12 +92,12 @@ class Route {
   final bool _needAuth;
   final Map<String, HashSet<WebSocket>> _rooms;
   final HashSet<GetSocket> _sockets;
-  FutureOr<Widget> Function(BuildContext context) _call;
+  final WidgetCallback call;
 
   Route(
     Method method,
     dynamic path,
-    FutureOr<Widget> Function(BuildContext context) call, {
+    this.call, {
     this.binding,
     List<String> keys,
     bool needAuth = false,
@@ -105,19 +107,21 @@ class Route {
         _sockets = (method == Method.ws ? HashSet<GetSocket>() : null),
         _path = _normalize(path, keys: keys) {
     if (_method == Method.ws) {
-      socketStream =
-          _socketController.stream.transform(WebSocketTransformer()).map((ws) {
-        return GetSocket(ws, _rooms, _sockets);
-      });
-
-      final context = BuildContext(null, socketStream);
-      Socket socket = call(context);
-      context.ws.listen((event) {
-        socket.builder(event);
-      });
-    } else {
-      _call = call;
+      _setupWs();
     }
+  }
+
+  void _setupWs() {
+    socketStream =
+        _socketController.stream.transform(WebSocketTransformer()).map((ws) {
+      return GetSocket(ws, _rooms, _sockets);
+    });
+
+    final context = BuildContext(null, socketStream: socketStream);
+    Socket socket = call(context);
+    context.ws.listen((event) {
+      socket.builder(event);
+    });
   }
 
   bool match(HttpRequest req) {
@@ -128,15 +132,26 @@ class Route {
 
   Future<void> handle(HttpRequest req, {int status}) async {
     if (_method == Method.ws) {
-      _socketController.add(req);
+      var request = ContextRequest(req);
+      request.params = _parseParams(req.uri.path, _path);
+      request.response = ContextResponse(req.response);
+
+      _verifyAuth(
+        req: request,
+        successCallback: () {
+          _socketController.add(req);
+        },
+      );
     } else {
       var request = ContextRequest(req);
       request.params = _parseParams(req.uri.path, _path);
       request.response = ContextResponse(req.response);
       if (status != null) request.response.status(status);
 
+      final context = BuildContext(request);
+
       Widget widget;
-      final prepareWidget = _call(BuildContext(request, socketStream));
+      final prepareWidget = call(context);
 
       if (prepareWidget is Future) {
         widget = await prepareWidget;
@@ -144,20 +159,10 @@ class Route {
         widget = prepareWidget;
       }
 
-      if (_needAuth) {
-        var message = _authHandler(request);
-        if (message == null) {
-          _sendResponse(widget, request);
-        } else {
-          request.response.status(401);
-          _sendResponse(
-            Json({'success': false, 'data': null, 'error': message}),
-            request,
-          );
-        }
-      } else {
-        _sendResponse(widget, request);
-      }
+      _verifyAuth(
+        req: request,
+        successCallback: () => _sendResponse(widget, request),
+      );
     }
   }
 
@@ -171,9 +176,9 @@ class Route {
     } else if (widget is HtmlText) {
       request.response.sendHtmlText(widget.data);
     } else if (widget is WidgetBuilder) {
-      await widget.builder?.call(BuildContext(request, socketStream));
+      await widget.builder?.call(BuildContext(request));
     } else if (widget is GetWidget) {
-      final wid = await widget.build(BuildContext(request, socketStream));
+      final wid = await widget.build(BuildContext(request));
       _sendResponse(wid, request);
     } else {
       request.response.send(widget.data);
@@ -259,6 +264,26 @@ class Route {
       return err.message;
     } catch (err) {
       return JwtException.invalidToken.message;
+    }
+  }
+
+  void _verifyAuth({
+    @required ContextRequest req,
+    @required void Function() successCallback,
+  }) {
+    if (_needAuth) {
+      var message = _authHandler(req);
+      if (message == null) {
+        successCallback();
+      } else {
+        req.response?.status(401);
+        _sendResponse(
+          Json({'success': false, 'data': null, 'error': message}),
+          req,
+        );
+      }
+    } else {
+      successCallback();
     }
   }
 }

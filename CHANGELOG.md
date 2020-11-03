@@ -1,3 +1,25 @@
+# [0.11.0] 
+* GREAT PERFORMANCE IMPROVEMENT!
+* In this update we were able to force the dart to use all the processor cores to work.
+GetServer's performance was already good up to 30k requests per second, but as the number of requests went up, using only one core the performance would drop. GetServer now uses all the processor cores, and forces the dart to use them through isolates, making GetServer's performance incredible, for both small and millions of requests. 
+  
+# [0.10.6] 
+* Change "toString()" to "jsonEncode()" on socket.emit to avoid decode errors
+
+# [0.10.5] 
+* Fix Socket.emit
+  
+# [0.10.4] 
+* Improve websockets
+  
+# [0.10.3] 
+* Fix sendToRoom
+* Clean Structure
+* Improve performance from Sockets requests
+  
+# [0.10.2] 
+* Fix Socket.broadcast and Socket.broadcastToRoom
+  
 # [0.10.1] 
 * Expose socket class
 

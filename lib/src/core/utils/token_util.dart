@@ -30,4 +30,17 @@ abstract class TokenUtil {
   static void saveJwtKey(String jwtKey) {
     Get.put(jwtKey, tag: 'jwtKey');
   }
+
+  static String getTokenFromHeader(ContextRequest request) {
+    var token = request.header('Authorization').first as String;
+    token = token.replaceAll('Bearer ', '');
+
+    return token;
+  }
+
+  static String getSubjectFromToken(ContextRequest request) {
+    var token = getTokenFromHeader(request);
+    var claims = getClaims(token);
+    return claims.subject;
+  }
 }

@@ -76,7 +76,7 @@ class SocketNotifier {
 
   void _tryOn(dynamic message) {
     try {
-      Map msg = jsonDecode(message);
+      Map<String, dynamic> msg = jsonDecode(message);
       final event = msg['type'];
       final data = msg['data'];
       if (_onEvents.containsKey(event)) {
@@ -99,7 +99,7 @@ extension Idd on WebSocket {
   int get id => hashCode;
 
   void emit(String event, Object data) {
-    add({'type': event, 'data': data});
+    add(jsonEncode({'type': event, 'data': data}));
   }
 }
 
@@ -115,7 +115,6 @@ class GetSocket implements WebSocketBase {
     _ws.listen((data) {
       socketNotifier.notifyData(data);
     }, onError: (err) {
-      //sockets.remove(_ws);
       socketNotifier.notifyError(Close(_ws, err.toString(), 0));
       close();
     }, onDone: () {
@@ -129,10 +128,22 @@ class GetSocket implements WebSocketBase {
   }
 
   @override
-  void send(Object message) {
+  void send(dynamic message) {
     _checkAvailable();
     _ws.add(message);
   }
+
+  final _value = <String, dynamic>{};
+
+  dynamic operator [](String key) {
+    return _value[key];
+  }
+
+  void operator []=(String key, dynamic value) {
+    _value[key] = value;
+  }
+
+  WebSocket get rawSocket => _ws;
 
   int get id => _ws.hashCode;
 
@@ -165,10 +176,10 @@ class GetSocket implements WebSocketBase {
 
   void sendToRoom(String room, Object message) {
     _checkAvailable();
-    if (rooms.containsKey(room) && rooms.containsValue(_ws)) {
-      rooms[room].forEach((element) {
+    if (rooms.containsKey(room) && rooms[room].contains(_ws)) {
+      for (var element in rooms[room]) {
         element.add(message);
-      });
+      }
     }
   }
 
@@ -178,18 +189,19 @@ class GetSocket implements WebSocketBase {
 
   void broadcastToRoom(String room, Object message) {
     _checkAvailable();
-    if (rooms.containsKey(room)) {
-      rooms[room].forEach((element) {
+
+    if (rooms.containsKey(room) && rooms[room].contains(_ws)) {
+      for (var element in rooms[room]) {
         if (element != _ws) {
           element.add(message);
         }
-      });
+      }
     }
   }
 
   @override
   void emit(String event, Object data) {
-    send({'type': event, 'data': data});
+    send(jsonEncode({'type': event, 'data': data}));
   }
 
   @override
