@@ -110,7 +110,11 @@ class GetServer with NodeMode {
     // ignore: unawaited_futures
     start(serverConfig);
 
-    await ProcessSignal.sigterm.watch().first;
+    if (Platform.isWindows)
+      await ProcessSignal.sigint.watch().first;
+    else
+      await ProcessSignal.sigterm.watch().first;
+
     return Future.value(this);
   }
 }
