@@ -6,6 +6,6 @@ class HtmlPage extends GetView {
   @override
   Widget build(BuildContext context) {
     final path = '${Directory.current.path}/example/web/index.html';
-    return Html(path);
+    return Html(path: path);
   }
 }

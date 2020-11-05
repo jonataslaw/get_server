@@ -2,8 +2,9 @@ import 'dart:io';
 import 'package:get_server/get_server.dart';
 
 // this this widget to make pagination simple and easy
+// ignore: must_be_immutable
 class Pageable extends GetWidget {
-  List<dynamic> list;
+  final List<dynamic> list;
   int page;
   int size;
   Pageable(this.list, {this.page = 1, this.size = 10});

@@ -24,7 +24,7 @@ class Close {
   Close(this.socket, this.message, this.reason);
 }
 
-typedef OpenSocket = void Function(WebSocket);
+typedef OpenSocket = void Function(GetSocket);
 
 typedef CloseSocket = void Function(Close);
 
@@ -99,13 +99,17 @@ extension Idd on WebSocket {
   int get id => hashCode;
 
   void emit(String event, Object data) {
-    add(jsonEncode({'type': event, 'data': data}));
+    send(jsonEncode({'type': event, 'data': data}));
+  }
+
+  void send(dynamic message) {
+    add(message);
   }
 }
 
 class GetSocket implements WebSocketBase {
   final WebSocket _ws;
-  final Map<String, HashSet<WebSocket>> rooms;
+  final Map<String, HashSet<GetSocket>> rooms;
   final HashSet<GetSocket> sockets;
   SocketNotifier socketNotifier = SocketNotifier();
   bool isDisposed = false;
@@ -156,21 +160,37 @@ class GetSocket implements WebSocketBase {
 
   void broadcast(Object message) {
     if (sockets.contains(this)) {
-      sockets.forEach((element) {
+      for (var element in sockets) {
         if (element != this) {
           element.send(message);
         }
-      });
+      }
     }
   }
 
   void broadcastEvent(String event, Object data) {
     if (sockets.contains(this)) {
-      sockets.forEach((element) {
+      for (var element in sockets) {
         if (element != this) {
           element.emit(event, data);
         }
-      });
+      }
+    }
+  }
+
+  void sendToAll(Object message) {
+    if (sockets.contains(this)) {
+      for (var element in sockets) {
+        element.send(message);
+      }
+    }
+  }
+
+  void emitToAll(String event, Object data) {
+    if (sockets.contains(this)) {
+      for (var element in sockets) {
+        element.emit(event, data);
+      }
     }
   }
 
@@ -178,7 +198,7 @@ class GetSocket implements WebSocketBase {
     _checkAvailable();
     if (rooms.containsKey(room) && rooms[room].contains(_ws)) {
       for (var element in rooms[room]) {
-        element.add(message);
+        element.send(message);
       }
     }
   }
@@ -190,10 +210,10 @@ class GetSocket implements WebSocketBase {
   void broadcastToRoom(String room, Object message) {
     _checkAvailable();
 
-    if (rooms.containsKey(room) && rooms[room].contains(_ws)) {
+    if (rooms.containsKey(room) && rooms[room].contains(this)) {
       for (var element in rooms[room]) {
-        if (element != _ws) {
-          element.add(message);
+        if (element != this) {
+          element.send(message);
         }
       }
     }
@@ -208,11 +228,11 @@ class GetSocket implements WebSocketBase {
   bool join(String room) {
     _checkAvailable();
     if (rooms.containsKey(room)) {
-      return rooms[room].add(_ws);
+      return rooms[room].add(this);
     } else {
       Get.log("Room [$room] don't exists, creating it");
       rooms[room] = HashSet();
-      return rooms[room].add(_ws);
+      return rooms[room].add(this);
     }
   }
 
@@ -220,14 +240,14 @@ class GetSocket implements WebSocketBase {
   void leave(String room) {
     _checkAvailable();
     if (rooms.containsKey(room)) {
-      rooms[room].remove(_ws);
+      rooms[room].remove(this);
     } else {
       Get.log("Room $room don't exists");
     }
   }
 
   void onOpen(OpenSocket fn) {
-    fn(_ws);
+    fn(this);
   }
 
   void onClose(CloseSocket fn) {

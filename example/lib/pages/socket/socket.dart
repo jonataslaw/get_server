@@ -3,7 +3,8 @@ import 'package:get_server/get_server.dart';
 class SocketPage extends GetView {
   @override
   Widget build(BuildContext context) {
-    return Socket(context, builder: (socket) {
+    return Socket(builder: (socket) {
+      print('build chamado');
       socket.on('join', (val) {
         final join = socket.join(val);
         if (join) {
@@ -17,6 +18,7 @@ class SocketPage extends GetView {
 
       socket.onOpen((ws) {
         print('new socket opened');
+        ws.send('ksaopkspaoksp');
       });
 
       socket.onClose((close) {

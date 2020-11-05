@@ -4,7 +4,7 @@ class GetPage {
   final Method method;
   final String name;
   final List<String> keys;
-  final GetView Function() page;
+  final Widget Function() page;
   final Bindings binding;
   final bool needAuth;
 
