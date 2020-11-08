@@ -58,6 +58,7 @@ class GetServer {
   final String privateKey;
   final String password;
   final bool cors;
+  final String corsUrl;
   final List<Route> _routes = <Route>[];
   final GetView onNotFound;
   final bool useLog;
@@ -75,6 +76,7 @@ class GetServer {
     this.shared = false,
     this.getPages,
     this.cors = false,
+    this.corsUrl = '*',
     this.log,
     this.onNotFound,
     this.initialBinding,
@@ -129,13 +131,14 @@ class GetServer {
     });
   }
 
-  void addCorsHeaders(HttpResponse response) {
-    response.headers.add('Access-Control-Allow-Origin', '*');
+  void addCorsHeaders(HttpResponse response, String corsUrl) {
+    response.headers.add('Access-Control-Allow-Origin', corsUrl);
     response.headers
         .add('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE');
     response.headers.add('Access-Control-Allow-Headers',
         'access-control-allow-origin,content-type,x-access-token');
   }
+  //  Authorization, X-Requested-With
 
   FutureOr<GetServer> _configure(HttpServer httpServer) {
     httpServer.listen((req) {
@@ -145,7 +148,7 @@ class GetServer {
 
       route?.binding?.dependencies();
       if (cors) {
-        addCorsHeaders(req.response);
+        addCorsHeaders(req.response, corsUrl);
         if (req.method.toLowerCase() == 'options') {
           var msg = {'status': 'ok'};
           req.response.write(json.encode(msg));
