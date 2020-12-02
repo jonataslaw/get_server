@@ -16,13 +16,10 @@ abstract class GetEndpoint<T> extends StatelessWidget {
   Widget build(BuildContext context);
 }
 
-typedef WidgetCallback = Widget Function(BuildContext context);
-
 class _Wrapper<T> {
   T data;
 }
 
-//TODO: Change the name after
 abstract class GetWidget<T> extends StatelessWidget {
   final _value = _Wrapper<T>();
 
@@ -35,44 +32,30 @@ abstract class GetWidget<T> extends StatelessWidget {
 }
 
 class WidgetEmpty extends Widget {
+  const WidgetEmpty({Key key}) : super(key: key);
   @override
   Element createElement(a, b) {
-    return _StubElement(this, a, b);
+    return null;
   }
-}
-
-class _StubElement extends Element {
-  _StubElement(
-      Widget widget, ContextRequest request, Stream<GetSocket> socketStream)
-      : super(widget, request, socketStream);
 }
 
 class WidgetResponse extends StatelessWidget {
-  WidgetResponse(this.text, {this.statusCode, this.headers, this.redirectUrl});
-  final String text;
+  WidgetResponse(
+    this.child, {
+    this.statusCode = 200,
+    this.headers,
+  });
   final int statusCode;
-  final String headers;
-  final String redirectUrl;
+  final Map headers;
+
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    context.request.response.status(statusCode);
-    context.request.response.header(headers);
-    context.request.response.send(text);
-    context.request.response.redirect(redirectUrl);
-    return WidgetEmpty();
-  }
-}
-
-class Text extends StatelessWidget {
-  Text(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    print('text chamado');
-    context.request.response.send(text);
-    return WidgetEmpty();
+    return FullHeadersWidget(
+      child: StatusCode(child: child, statusCode: statusCode),
+      headers: headers,
+    );
   }
 }
 
@@ -101,31 +84,75 @@ class StatusCode extends StatelessWidget {
 }
 
 class HeaderWidget extends StatelessWidget {
-  HeaderWidget({@required this.child, this.name, this.value});
+  HeaderWidget(
+      {@required this.child, @required this.name, @required this.value});
   final Widget child;
   final String name;
   final Object value;
 
   @override
   Widget build(BuildContext context) {
-    context.request.response.header(name, value);
-    return child ?? WidgetEmpty();
+    if (key != null && value != null) {
+      context.request.response.header(name, value);
+    }
+    return child;
   }
 }
 
-class Html extends StatelessWidget {
-  final String path;
+class FullHeadersWidget extends StatelessWidget {
+  FullHeadersWidget({
+    @required this.child,
+    @required this.headers,
+  });
   final Widget child;
-  Html({@required this.path, this.child});
+  final Map headers;
+
   @override
   Widget build(BuildContext context) {
-    // context.response.configureHtml();
+    if (headers != null) {
+      headers.forEach((key, value) {
+        context.request.response.header(key, value);
+      });
+    }
+    return child;
+  }
+}
+
+abstract class SenderWidget extends StatelessWidget {}
+
+class Html extends SenderWidget {
+  final String path;
+  Html({@required this.path});
+  @override
+  Widget build(BuildContext context) {
     context.response.sendFile(path);
     return WidgetEmpty();
   }
 }
 
-class HtmlText extends StatelessWidget {
+class BytesData extends SenderWidget {
+  BytesData(this.bytes);
+  final List<int> bytes;
+
+  @override
+  Widget build(BuildContext context) {
+    context.sendBytes(bytes);
+    return WidgetEmpty();
+  }
+}
+
+class Text extends SenderWidget {
+  Text(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    context.request.response.send(text);
+    return WidgetEmpty();
+  }
+}
+
+class HtmlText extends SenderWidget {
   HtmlText(this.content);
   final String content;
 
@@ -136,8 +163,8 @@ class HtmlText extends StatelessWidget {
   }
 }
 
-class Json extends StatelessWidget {
-  final Object content;
+class Json extends SenderWidget {
+  final dynamic content;
   Json(this.content);
   @override
   Widget build(BuildContext context) {
@@ -150,15 +177,17 @@ typedef WidgetBuilderCallback = Widget Function(BuildContext context);
 
 typedef SocketBuilder = void Function(GetSocket socket);
 
-class Socket extends StatelessWidget {
+class Socket extends SenderWidget {
   Socket({@required this.builder});
   final SocketBuilder builder;
   @override
   Widget build(BuildContext context) {
-    context.ws.listen((event) {
-      print('ver se isso é chamado sempre');
-      builder(event);
+    var event = context.getSocket;
+    event.rawSocket.done.then((value) {
+      event = null;
     });
+    builder(event);
+
     return WidgetEmpty();
   }
 }
@@ -172,4 +201,131 @@ class WidgetBuilder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => builder(context);
+}
+
+typedef WidgetCallback = Widget Function();
+
+abstract class ObxWidget extends StatefulWidget {
+  const ObxWidget() : super();
+
+  @override
+  _ObxState createState() => _ObxState();
+
+  @protected
+  Widget build();
+}
+
+class _ObxState extends State<ObxWidget> {
+  RxInterface _observer;
+  StreamSubscription subs;
+
+  _ObxState() {
+    _observer = Rx();
+  }
+
+  @override
+  void initState() {
+    subs = _observer.listen((data) => setState(() {}));
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    subs.cancel();
+    _observer.close();
+    super.dispose();
+  }
+
+  Widget get notifyChilds {
+    final observer = getObs;
+    getObs = _observer;
+    final result = widget.build();
+    if (!_observer.canUpdate) {
+      throw '''
+      [Get] the improper use of a GetX has been detected. 
+      You should only use GetX or Obx for the specific widget that will be updated.
+      If you are seeing this error, you probably did not insert any observable variables into GetX/Obx 
+      or insert them outside the scope that GetX considers suitable for an update 
+      (example: GetX => HeavyWidget => variableObservable).
+      If you need to update a parent widget and a child widget, wrap each one in an Obx/GetX.
+      ''';
+    }
+    getObs = observer;
+    return result;
+  }
+
+  @override
+  Widget build(BuildContext context) => notifyChilds;
+}
+
+/// The simplest reactive widget in GetX.
+///
+/// Just pass your Rx variable in the root scope of the callback to have it
+/// automatically registered for changes.
+///
+/// final _name = "GetX".obs;
+/// Obx(() => Text( _name.value )),... ;
+class Obx extends ObxWidget {
+  final WidgetCallback builder;
+
+  const Obx(this.builder);
+
+  @override
+  Widget build() => builder();
+}
+
+class Visibility extends StatelessWidget {
+  const Visibility({
+    Key key,
+    @required this.child,
+    this.replacement = const WidgetEmpty(),
+    this.visible = true,
+  })  : assert(child != null),
+        assert(replacement != null),
+        assert(visible != null),
+        super();
+
+  final Widget child;
+  final Widget replacement;
+  final bool visible;
+
+  @override
+  Widget build(BuildContext context) {
+    return visible ? child : replacement;
+  }
+}
+
+typedef MultiPartBuilder = Widget Function(
+    BuildContext context, MultipartUpload file);
+
+class MultiPartWidget extends StatefulWidget {
+  MultiPartWidget({
+    Key key,
+    this.name = 'file',
+    @required this.builder,
+  }) : super(key: key);
+  final MultiPartBuilder builder;
+  final String name;
+  @override
+  _MultiPartWidgetState createState() => _MultiPartWidgetState();
+}
+
+class _MultiPartWidgetState extends State<MultiPartWidget> {
+  @override
+  void initState() {
+    _decoderFile();
+    super.initState();
+  }
+
+  MultipartUpload _upload;
+
+  Future<void> _decoderFile() async {
+    _upload = await context.file(widget.name);
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _upload == null ? WidgetEmpty() : widget.builder(context, _upload);
+  }
 }

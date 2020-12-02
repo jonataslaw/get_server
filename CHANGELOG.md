@@ -1,3 +1,8 @@
+# [0.90.0] - Release candidate 1
+* After a change in the whole structure, and trying GetServer for 1 month in a real application, we are launching release candidate 1. This version is one of the candidates for the Stable version.
+100% compatibility with the Flutter has been finalized. Everything you have on Flutter can now be found here. initState? dispose? StatefulWidgets? setState? Obx? var.obs? hierarchy? All of this was added in this update. A new widget was added to make it easier to obtain upload resources (MultiPartWidget), a widget api was created from scratch that is fully compatible with the Flutter api. Headers, PageRedirect, StatusCode, all of which can be added via widgets. If you want to hide a result, or prevent it from being loaded for the user until you do another task, you can use the Visibility widget. Everything is widgets just like Flutter's. In addition, we have made the multithreaded server external and optional, as this totally prevents any risk of request failure due to loss of isolate references. If you share a variable between isolates, it will be lost in many requests, and the only way to prevent this is to have the server copy in each isolate. That way if you have a server with 1 or 2 colors, use the server as singlethread, isolates in this case will consume more RAM and will not be beneficial. If you have more than 2 colors, use Isolates, as you will get more out of multithread.
+In this version, you probably won't find bugs (or you will find very few), 100% of known bugs have been fixed.
+
 # [0.11.0] 
 * GREAT PERFORMANCE IMPROVEMENT!
 * In this update we were able to force the dart to use all the processor cores to work.

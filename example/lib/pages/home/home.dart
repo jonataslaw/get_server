@@ -1,8 +1,8 @@
 import 'package:get_server/get_server.dart';
 
-class HomePage extends GetView {
+class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Text('Hello, you are on home');
+    return Text('Hello world');
   }
 }

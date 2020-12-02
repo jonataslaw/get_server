@@ -4,7 +4,10 @@ class SocketPage extends GetView {
   @override
   Widget build(BuildContext context) {
     return Socket(builder: (socket) {
-      print('build chamado');
+      socket.onOpen((ws) {
+        ws.send('socket ${ws.id} connected');
+      });
+
       socket.on('join', (val) {
         final join = socket.join(val);
         if (join) {
@@ -14,11 +17,6 @@ class SocketPage extends GetView {
       socket.onMessage((data) {
         print('data: $data');
         socket.send(data);
-      });
-
-      socket.onOpen((ws) {
-        print('new socket opened');
-        ws.send('ksaopkspaoksp');
       });
 
       socket.onClose((close) {

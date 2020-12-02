@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:mime/mime.dart';
 
+typedef DisposeCallback = void Function();
+
 class ContextResponse {
   final HttpResponse _response;
 
@@ -13,6 +15,12 @@ class ContextResponse {
     }
     _response.headers.set(name, value);
     return this;
+  }
+
+  DisposeCallback _dispose;
+
+  void addDisposeCallback(DisposeCallback disposer) {
+    _dispose = disposer;
   }
 
   ContextResponse get(String name) => header(name);
@@ -92,9 +100,9 @@ class ContextResponse {
     return this;
   }
 
-  Future send(Object string) {
+  Future send(Object string) async {
     _response.write(string);
-    return _response.close();
+    return close();
   }
 
   Future sendJson(Object data) {
@@ -109,13 +117,13 @@ class ContextResponse {
     // create a temporary solution
     _response.headers.set('Content-Type', 'application/json; charset=UTF-8');
     _response.write(jsonEncode(data));
-    return _response.close();
+    return close();
   }
 
   Future sendHtmlText(Object data) {
     _response.headers.set('Content-Type', 'text/html; charset=UTF-8');
     _response.write(data);
-    return _response.close();
+    return close();
   }
 
   Future sendFile(String path) {
@@ -128,20 +136,22 @@ class ContextResponse {
         .then((length) => header('Content-Length', length))
         .then((_) => mime(file.path))
         .then((_) => file.openRead().pipe(_response))
-        .then((_) => _response.close())
+        .then((_) => close())
         .catchError((_) {
       _response.statusCode = HttpStatus.notFound;
-      return _response.close();
+      return close();
     }, test: (e) => e == 404);
   }
 
   Future close() {
-    return _response.close();
+    final _close = _response.close();
+    _dispose?.call();
+    return _close;
   }
 
   Future redirect(String url, [int code = 302]) {
     _response.statusCode = code;
     header('Location', url);
-    return _response.close();
+    return close();
   }
 }

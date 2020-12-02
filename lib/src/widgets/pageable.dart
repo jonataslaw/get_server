@@ -13,7 +13,7 @@ class Pageable extends GetWidget {
   Widget build(BuildContext context) {
     var pageparam = context.param('page');
     if (pageparam != null) {
-      var _page = int.parse(pageparam, onError: (_) => null);
+      var _page = int.tryParse(pageparam);
       if (_page == null) {
         context.response.status(HttpStatus.badRequest).sendJson(_Erro(
             errocode: HttpStatus.badRequest,
@@ -26,7 +26,7 @@ class Pageable extends GetWidget {
 
     var sizeparam = context.param('size');
     if (sizeparam != null) {
-      var _size = int.parse(sizeparam, onError: (_) => null);
+      var _size = int.tryParse(sizeparam);
       if (_size == null) {
         context.response.status(HttpStatus.badRequest).sendJson(_Erro(
             errocode: HttpStatus.badRequest,

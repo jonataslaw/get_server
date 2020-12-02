@@ -1,24 +1,26 @@
 # Get Server
 
-The first backend/frontend/mobile framework written in one syntax for Android, iOS, Web, Linux, Mac, Windows, Fuchsia, and backend.
+GetServer allows you to write backend applications with Flutter. Everything here is familiar, from the widgets, to the setState, initState and dispose methods, to the way you manage your projects with GetX using controllers and bindings. You don't need any additional knowledge to use GetServer, if you know Flutter, you can write your application's API using it.
+GetServer gives you 100% reuse of code between backend and frontend.
 
 ![](get_server.png)
 
 
-GetX is the most popular framework for Flutter, and has gained great engagement in the community for facilitating development to the extreme, making the most complex things of Flutter simple.
-However, many developers start at Flutter/GetX without any basis in the backend, and are forced to learn another stack, another language, to build their APIs.
-GetX fulfilling its mission of transforming development into something simple and productive, created its own server with almost 100% use of the frontEnd code. If you have a local database written in dart (like Hive and Sembast), you can turn it into a backend and build your api to provide them with a simple copy and paste.
+Flutter has become increasingly popular, and as it grows, there is also a new need for a niche of developers who want to use the same Stack.
+GetX for its ease and practicality has attracted many new developers every day, who started using Flutter to build mobile, desktop and also web applications. However, the GetX community has turned to a common need: the lack of a cohesive ecosystem for backend programming without a large learning curve.
+The purpose of this project is to supply the needs of these developers, who can now build backend applications with a 0% learning curve. If you already program in another language, I invite you to test it, if you feel good, or mastered another language, maybe GetServer is not for you, but we are happy to bring ease to people's lives, so if you program mobile but you have no idea how to create an api, you may have found what you were looking for.
+If you have a local database written in dart (like Hive and Sembast), you can turn it into a backend and build your api to provide them with a simple copy and paste.
 All of your Model classes are reused.
-All its route syntax is reused.
-All of your business logic is reused, and your visualization can be easily exchanged for your API, with a few lines of code.
+All its route syntax is reused (if you use GetX)
+All of your business logic is reused.
 
 ## Getting Started
-
-This project is still in beta, your contribution will be very welcome for the stable launch.
 
  Installing
 
 Add Get to your pubspec.yaml file:
+
+run `dart create project` and add to your pubspec:
 
 ```yaml
 dependencies:
@@ -31,7 +33,25 @@ Import get in files that it will be used:
 import 'package:get_server/get_server.dart';
 ```
 
-To create a server, and send a message:
+To create a server, and send a plain text:
+
+```dart
+void main() {
+  runApp(
+    GetServer(
+      home: Home(),
+    ),
+  );
+}
+
+class Home extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Text('Welcome to GetX!');
+  }
+}
+```
+However, if you don't need to have a single page, you will need named routes to define your urls. This is stupidly simple, and identical to GetX routes for frontend
 
 ```dart
 void main() {
@@ -42,19 +62,19 @@ void main() {
   ));
 }
 
-class Home extends GetView {
+class Home extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text("Welcome to GetX");
   }
 }
 ```
-This is stupidly simple, you just define the path of your URL, and the page you want to deliver!
+you just define the path of your URL, and the page you want to deliver!
 
 What if you want to return a json page?
 
 ```dart
-class Home extends GetView {
+class Home extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Json({
@@ -67,23 +87,26 @@ class Home extends GetView {
 Ok, you created your project with Flutter web, and you have no idea how to host it on a VPS, would it be possible to create the API for your application, and use the same GetX to display the Flutter web project?
 Yep. You need only copy your web folder from Flutter project, and paste on directory 
 from server file. 
-Flutter web generates an html file that calls a js file, which in turn requests several files that must be in a public folder. To make the Flutter web folder a public folder, just add it to your GetServer. That way when you enter your server, you will automatically be directed to the generator site with Flutter.
+Flutter web generates an html file that calls a js file, which in turn requests several files that must be in a public folder. To make the Flutter web folder a public folder, just add it to your GetServer. That way when you enter your server, you will automatically be directed to site made with Flutter.
 
 ```dart
 void main() {
-  runApp(GetServer(
-    public: Public('web'), // turn web folder public
-    getPages: [
-      GetPage(name: '/api', page:()=> HomeApi()),
-    ],   
-  ));
+  runApp(
+    GetServer(
+      home: FolderWidget('web'),
+      getPages: [
+        GetPage(name: '/api', page: () => ApiPage()),
+      ],
+    ),
+  );
 }
 ```
+- Note: Static folder only can be the root folder. It will replace any '/' route
 
 If you have an html that does not call files from the server, but only external files, you can use the Html widget for a specific path.
 
 ```dart
-class Home extends GetView {
+class Home extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final path = '${Directory.current.path}/web/index.html';
@@ -100,14 +123,16 @@ For the example not to be small, I will return a json response with the name of 
 ```dart
 class Home extends GetView {
   @override
-  Future<Widget> build(BuildContext context) async {
-    final upload = await context.file('file');
-    final data = {
-      "nameFile": upload.name,
-      "mimeType": upload.mimeType,
-      "fileBase64": "${base64Encode(upload.data)}",
-    };
-    return Json(data);
+  Widget build(BuildContext context) {
+    return MultiPartWidget(
+      builder: (context, upload) {
+        return Json({
+           "nameFile": upload.name,
+           "mimeType": upload.mimeType,
+           "fileBase64": "${base64Encode(upload.data)}",
+        });
+      },
+    );
   }
 }
 ```
@@ -151,22 +176,24 @@ Okay, today is your lucky day. This is not just an http server, but also a webso
 class SocketPage extends GetView {
   @override
   Widget build(BuildContext context) {
-    return Socket(context, builder: (socket) {
-    
-      socket.onMessage((data) { // message based
-        socket.send(data); // echo
-      });
-
-      socket.on('join', (val) { // event based
-        socket.join(val); // join to group
-      });
-
+     return Socket(builder: (socket) {
       socket.onOpen((ws) {
-        print('new socket opened'); // called when socket is open
+        ws.send('socket ${ws.id} connected');
       });
 
-      socket.onClose((ws) {
-        print('socket has been closed. Motivo: ${ws.message}');
+      socket.on('join', (val) {
+        final join = socket.join(val);
+        if (join) {
+          socket.sendToRoom(val, 'socket: ${socket.hashCode} join to room');
+        }
+      });
+      socket.onMessage((data) {
+        print('data: $data');
+        socket.send(data);
+      });
+
+      socket.onClose((close) {
+        print('socket has closed. Reason: ${close.message}');
       });
     });
   }
@@ -183,7 +210,7 @@ With get_server you can use this path. You can use get_server as well:
 ```dart
 void main() {
   final app = GetServer();
-  app.get('/', (res) => res.send('Get_server of javascript way'));
+  app.get('/', (ctx) => Text('Get_server of javascript way'));
   app.ws('/socket', (res) {
     res.ws.listen((socket) {
       socket.onMessage((data) {
@@ -203,17 +230,36 @@ void main() {
 }
 ```
 
+### More Power  
+
+If you host your Getserver on a cheap server with few cores, the default option is more than enough. However, if you have a server with many cores and want to make the most of it, you can start the multithreaded server with isolates. This requires only a small step.
+Create a global function (isolated requirement), insert your runApp into it, and start it in `runIsolate`.
+
+```dart
+void main() {
+  runIsolate(init);
+}
+
+void init(_) {
+  runApp(
+    GetServer(
+      home: Home(),
+    ),
+  );
+}
+```
+Note: This is a function that creates a thread for each CPU and you can use it throughout your application with GetServer. If you need activity with intense CPU and memory activity, you can use runIsolate.
 
 ### How can you help?
 - Creating Pull requests, adding resources, improving documentation, creating sample applications, producing articles, videos about Getx, suggesting improvements, and helping to disseminate this framework in development communities.
 - Supporting this project.
 
 TODO:
-- Add Auth options.
-- Remove requirements dart:mirrors to allow people to compile the server and use only the binary, protecting its source code.
+- ~Add Auth options~
+- ~Remove requirements dart:mirrors to allow people to compile the server and use only the binary, protecting its source code.~
+- ~Creation of Bindings and Controllers (as in the main GetX) to adapt the project 100% with Getx for frontend.~
 - Add some ORM
-- Create a dart SDK script installation to make it easier to install get_server on servers.
-- Creation of Bindings and Controllers (as in the main GetX) to adapt the project 100% with Getx for frontend.
+
 
 ### Accessing GetX:
 

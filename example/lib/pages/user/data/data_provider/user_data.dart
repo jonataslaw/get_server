@@ -1,8 +1,8 @@
-abstract class IUserProvider {
+mixin IUserProvider {
   Map<String, dynamic> getUser(String name);
 }
 
-class UserProvider extends IUserProvider {
+class UserProvider with IUserProvider {
   @override
   Map<String, dynamic> getUser(String name) {
     if (name.toLowerCase() == 'pedro') {
