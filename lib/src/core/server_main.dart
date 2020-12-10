@@ -1,32 +1,39 @@
-import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
-import 'package:get_server/src/socket/socket.dart';
-import 'package:http_server/http_server.dart';
-import 'package:meta/meta.dart';
-import '../../get_server.dart';
-import '../routes/route.dart';
+part of server;
 
-class GetPage {
-  final Method method;
-  final String name;
-  final List<String> keys;
-  final GetView Function() page;
-  final Bindings binding;
-  final bool needAuth;
-
-  const GetPage({
-    this.method = Method.get,
-    this.name = '/',
-    this.page,
-    this.binding,
-    this.keys,
-    this.needAuth = false,
-  });
+void runIsolate(void Function(dynamic) isol) {
+  isol(null);
+  final list = List.generate(Platform.numberOfProcessors - 1, (index) => null);
+  for (var item in list) {
+    Isolate.spawn(isol, item);
+  }
 }
 
-Future<GetServer> runApp(GetServer server) {
-  return server.start();
+void runApp(GetServer server) {
+  server.start();
+  return;
+}
+
+class FolderWidget extends StatelessWidget {
+  final String folder;
+  // final String path;
+  final bool allowDirectoryListing;
+  final bool followLinks;
+  final bool jailRoot;
+
+  FolderWidget(
+    this.folder, {
+
+    /// awaiting dart lang solution
+    /// https://github.com/dart-lang/http_server/issues/81
+    // this.path = '/',
+    this.allowDirectoryListing = true,
+    this.followLinks = false,
+    this.jailRoot = true,
+  });
+  @override
+  Widget build(BuildContext context) {
+    return WidgetEmpty();
+  }
 }
 
 class Public {
@@ -36,7 +43,7 @@ class Public {
   final bool followLinks;
   final bool jailRoot;
 
-  Public(
+  const Public(
     this.folder, {
 
     /// awaiting dart lang solution
@@ -48,9 +55,10 @@ class Public {
   });
 }
 
-class GetServer {
-  final LogWriterCallback log;
-  final List<GetPage> getPages;
+class GetServer with NodeMode {
+  HttpServer _server;
+  VirtualDirectory _virtualDirectory;
+  final List<GetPage> _getPages;
   final String host;
   final int port;
   final String certificateChain;
@@ -59,34 +67,29 @@ class GetServer {
   final String password;
   final bool cors;
   final String corsUrl;
-  final List<Route> _routes = <Route>[];
-  final GetView onNotFound;
+  final Widget onNotFound;
   final bool useLog;
   final String jwtKey;
-  HttpServer _server;
-  VirtualDirectory _virtualDirectory;
-  final Public public;
+  Public _public;
+  final Widget home;
 
   GetServer({
-    this.host = '127.0.0.1',
+    this.host = '0.0.0.0',
     this.port = 8080,
     this.certificateChain,
     this.privateKey,
     this.password,
-    this.shared = false,
-    this.getPages,
+    this.shared = true,
+    List<GetPage> getPages,
     this.cors = false,
     this.corsUrl = '*',
-    this.log,
     this.onNotFound,
     this.initialBinding,
     this.useLog = true,
     this.jwtKey,
-    this.public,
-  }) {
-    if (log != null) {
-      Get.log = log;
-    }
+    this.home,
+  }) : _getPages = getPages ?? List.from([]) {
+    _homeParser();
     initialBinding?.dependencies();
   }
 
@@ -94,41 +97,99 @@ class GetServer {
 
   void stop() => _server.close();
 
-  Future<GetServer> start() {
-    if (getPages != null) {
-      if (jwtKey != null) TokenUtil.saveJwtKey(jwtKey);
+  Future<GetServer> start() async {
+    if (_getPages != null) {
+      if (jwtKey != null) {
+        TokenUtil.saveJwtKey(jwtKey);
+      }
 
-      getPages.forEach((route) {
-        _routes.add(
-          Route(
-            route.method,
-            route.name,
-            route?.page()?.build,
-            binding: route.binding,
-            keys: route.keys,
-            needAuth: route.needAuth,
-          ),
-        );
-      });
+      RouteConfig.i.addRoutes(_getPages);
     }
 
+    await startServer();
+
+    return Future.value(this);
+  }
+
+  Future<void> startServer() async {
+    Get.log('Server started on ${host}:${port}');
+
+    _server = await _getHttpServer();
+
+    _server.listen(
+      (req) {
+        if (useLog) Get.log('Method ${req.method} on ${req.uri}');
+        final route = RouteConfig.i.findRoute(req);
+
+        route?.binding?.dependencies();
+        if (cors) {
+          addCorsHeaders(req.response, corsUrl);
+          if (req.method.toLowerCase() == 'options') {
+            var msg = {'status': 'ok'};
+            req.response.write(json.encode(msg));
+            req.response.close();
+          }
+        }
+        if (route != null) {
+          route.handle(req);
+        } else {
+          if (_public != null) {
+            _virtualDirectory ??= VirtualDirectory(
+              _public.folder,
+              // pathPrefix: public.path,
+            )
+              ..allowDirectoryListing = _public.allowDirectoryListing
+              ..jailRoot = _public.jailRoot
+              ..followLinks = _public.followLinks
+              ..errorPageHandler = (callback) {
+                _onNotFound(
+                  callback,
+                  onNotFound,
+                );
+              }
+              ..directoryHandler = (dir, req) {
+                var indexUri = Uri.file(dir.path).resolve('index.html');
+                _virtualDirectory.serveFile(File(indexUri.toFilePath()), req);
+              };
+
+            _virtualDirectory.serveRequest(req);
+          } else {
+            _onNotFound(
+              req,
+              onNotFound,
+            );
+          }
+        }
+      },
+    );
+  }
+
+  void _homeParser() {
+    if (home == null) return;
+    if (home is FolderWidget) {
+      var _home = home as FolderWidget;
+      _public = Public(
+        _home.folder,
+        allowDirectoryListing: _home.allowDirectoryListing,
+        followLinks: _home.followLinks,
+        jailRoot: _home.jailRoot,
+      );
+    } else {
+      _getPages.add(GetPage(name: '/', page: () => home));
+    }
+  }
+
+  Future<HttpServer> _getHttpServer() {
     if (privateKey != null) {
       var context = SecurityContext();
       if (certificateChain != null) {
         context.useCertificateChain(File(certificateChain).path);
       }
       context.usePrivateKey(File(privateKey).path, password: password);
-      return HttpServer.bindSecure(host, port, context, shared: shared)
-          .then(_configure)
-          .catchError((err) {
-        Get.log(err?.toString(), isError: true);
-      });
+      return HttpServer.bindSecure(host, port, context, shared: shared);
+    } else {
+      return HttpServer.bind(host, port, shared: shared);
     }
-    return HttpServer.bind(host, port, shared: shared)
-        .then(_configure)
-        .catchError((err) {
-      Get.log(err?.toString(), isError: true);
-    });
   }
 
   void addCorsHeaders(HttpResponse response, String corsUrl) {
@@ -138,91 +199,17 @@ class GetServer {
     response.headers.add('Access-Control-Allow-Headers',
         'access-control-allow-origin,content-type,x-access-token');
   }
-  //  Authorization, X-Requested-With
 
-  FutureOr<GetServer> _configure(HttpServer httpServer) {
-    httpServer.listen((req) {
-      if (useLog) Get.log('Method ${req.method} on ${req.uri}');
-      var route =
-          _routes.firstWhere((route) => route.match(req), orElse: () => null);
-
-      route?.binding?.dependencies();
-      if (cors) {
-        addCorsHeaders(req.response, corsUrl);
-        if (req.method.toLowerCase() == 'options') {
-          var msg = {'status': 'ok'};
-          req.response.write(json.encode(msg));
-          req.response.close();
-          return;
-        }
-      }
-      if (route != null) {
-        route.handle(req);
-      } else {
-        /// TODO: Check if issue from VirtualDirectory with custom path was resolved
-        if (public != null) {
-          _virtualDirectory ??= VirtualDirectory(
-            public.folder,
-            // pathPrefix: public.path,
-          )
-            ..allowDirectoryListing = public.allowDirectoryListing
-            ..jailRoot = public.jailRoot
-            ..followLinks = public.followLinks
-            ..errorPageHandler = _onNotFound
-            ..directoryHandler = (Directory dir, HttpRequest req) {
-              var indexUri = Uri.file(dir.path).resolve('index.html');
-              _virtualDirectory.serveFile(File(indexUri.toFilePath()), req);
-            };
-
-          _virtualDirectory.serveRequest(req);
-        } else {
-          _onNotFound(req);
-        }
-      }
-    }, onError: (err) {
-      Get.log(err?.toString(), isError: true);
-    });
-
-    Get.log('Server started on $host:$port');
-
-    return this;
-  }
-
-  void _onNotFound(HttpRequest req) {
+  void _onNotFound(HttpRequest req, Widget onNotFound) {
     if (onNotFound != null) {
       Route(
         Method.get,
-        req.uri.toString(),
-        onNotFound.build,
+        RouteParser.normalize(req.uri.toString()),
+        onNotFound,
       ).handle(req, status: HttpStatus.notFound);
     } else {
       pageNotFound(req);
     }
-  }
-
-  void get(String path, FutureOr Function(BuildContext context) build,
-      {List<String> keys}) {
-    _routes.add(Route(Method.get, path, build, keys: keys));
-  }
-
-  void post(String path, FutureOr Function(BuildContext context) build,
-      {List<String> keys}) {
-    _routes.add(Route(Method.post, path, build, keys: keys));
-  }
-
-  void delete(String path, FutureOr Function(BuildContext context) build,
-      {List<String> keys}) {
-    _routes.add(Route(Method.delete, path, build, keys: keys));
-  }
-
-  void put(String path, FutureOr Function(BuildContext context) build,
-      {List<String> keys}) {
-    _routes.add(Route(Method.put, path, build, keys: keys));
-  }
-
-  void ws(String path, FutureOr Function(BuildContext context) build,
-      {List<String> keys}) {
-    _routes.add(Route(Method.ws, path, build, keys: keys));
   }
 
   void pageNotFound(HttpRequest req) {
@@ -230,59 +217,4 @@ class GetServer {
       ..statusCode = HttpStatus.notFound
       ..close();
   }
-}
-
-// Suggestion, change that name to GetEndpoint
-abstract class GetView<T> {
-  final String tag = null;
-
-  T get controller => GetInstance().find<T>(tag: tag);
-  FutureOr<Widget> build(BuildContext context);
-}
-
-abstract class Widget<T> {
-  Widget({this.data});
-  final T data;
-}
-
-//TODO: Change the name after
-abstract class GetWidget<T> extends Widget {
-  final Set<T> _value = <T>{};
-
-  final String tag = null;
-
-  T get controller {
-    if (_value.isEmpty) _value.add(GetInstance().find<T>(tag: tag));
-    return _value.first;
-  }
-
-  FutureOr<Widget> build(BuildContext context);
-}
-
-class Text extends Widget<String> {
-  Text(String text) : super(data: text);
-}
-
-class Html extends Widget<String> {
-  Html(String path) : super(data: path);
-}
-
-class HtmlText extends Widget<String> {
-  HtmlText(String htmlText) : super(data: htmlText);
-}
-
-class Json extends Widget<dynamic> {
-  Json(dynamic jsonRaw) : super(data: jsonRaw);
-}
-
-class WidgetBuilder extends Widget {
-  final BuildContext context;
-  final FutureOr Function(BuildContext) builder;
-  WidgetBuilder(this.context, {@required this.builder});
-}
-
-class Socket extends Widget<void> {
-  Socket(this.context, {@required this.builder});
-  final BuildContext context;
-  final Function(GetSocket) builder;
 }
