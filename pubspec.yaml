@@ -17,4 +17,3 @@ dependencies:
   getstream: ^1.2.1
 
 dev_dependencies:
-  pedantic:
