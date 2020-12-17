@@ -66,6 +66,7 @@ class GetServer with NodeMode {
   final String privateKey;
   final String password;
   final bool cors;
+  final String corsUrl;
   final Widget onNotFound;
   final bool useLog;
   final String jwtKey;
@@ -81,6 +82,7 @@ class GetServer with NodeMode {
     this.shared = true,
     List<GetPage> getPages,
     this.cors = false,
+    this.corsUrl = '*',
     this.onNotFound,
     this.initialBinding,
     this.useLog = true,
@@ -121,7 +123,7 @@ class GetServer with NodeMode {
 
         route?.binding?.dependencies();
         if (cors) {
-          addCorsHeaders(req.response);
+          addCorsHeaders(req.response, corsUrl);
           if (req.method.toLowerCase() == 'options') {
             var msg = {'status': 'ok'};
             req.response.write(json.encode(msg));
@@ -190,8 +192,8 @@ class GetServer with NodeMode {
     }
   }
 
-  void addCorsHeaders(HttpResponse response) {
-    response.headers.add('Access-Control-Allow-Origin', '*');
+  void addCorsHeaders(HttpResponse response, String corsUrl) {
+    response.headers.add('Access-Control-Allow-Origin', corsUrl);
     response.headers
         .add('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE');
     response.headers.add('Access-Control-Allow-Headers',

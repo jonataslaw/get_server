@@ -298,6 +298,8 @@ class Visibility extends StatelessWidget {
 typedef MultiPartBuilder = Widget Function(
     BuildContext context, MultipartUpload file);
 
+typedef PayloadBuilder = Widget Function(BuildContext context, Map payload);
+
 class MultiPartWidget extends StatefulWidget {
   MultiPartWidget({
     Key key,
@@ -327,5 +329,36 @@ class _MultiPartWidgetState extends State<MultiPartWidget> {
   @override
   Widget build(BuildContext context) {
     return _upload == null ? WidgetEmpty() : widget.builder(context, _upload);
+  }
+}
+
+class PayloadWidget extends StatefulWidget {
+  PayloadWidget({
+    Key key,
+    @required this.builder,
+  }) : super(key: key);
+  final PayloadBuilder builder;
+
+  @override
+  _PayloadWidgetState createState() => _PayloadWidgetState();
+}
+
+class _PayloadWidgetState extends State<PayloadWidget> {
+  @override
+  void initState() {
+    _decoderFile();
+    super.initState();
+  }
+
+  Map _payload;
+
+  Future<void> _decoderFile() async {
+    _payload = await context.payload();
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _payload == null ? WidgetEmpty() : widget.builder(context, _payload);
   }
 }
