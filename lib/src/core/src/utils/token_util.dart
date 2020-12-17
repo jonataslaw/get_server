@@ -1,6 +1,4 @@
-import 'package:get_server/get_server.dart';
-import 'package:jaguar_jwt/jaguar_jwt.dart';
-import 'package:meta/meta.dart';
+part of server;
 
 abstract class TokenUtil {
   static String generateToken({@required JwtClaim claim}) {

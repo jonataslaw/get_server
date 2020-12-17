@@ -9,4 +9,5 @@ class Routes {
   static const UPLOAD = '/upload';
   static const SOCKET = '/socket';
   static const PAGEABLE = '/pageable';
+  static const VISIBILITY = '/visibility';
 }

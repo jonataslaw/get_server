@@ -1,23 +1,28 @@
 part of server;
 
 mixin NodeMode {
-  void get(String path, Widget build, {List<String> keys}) {
-    _addRoute(Route(Method.get, path, build, keys: keys));
+  void get(String name, WidgetCallback build, {List<String> keys}) {
+    final path = RouteParser.normalize(name, keys: keys);
+    RouteConfig.i.addRoute(Route(Method.get, path, build()));
   }
 
-  void post(String path, Widget build, {List<String> keys}) {
-    _addRoute(Route(Method.post, path, build, keys: keys));
+  void post(String name, WidgetCallback build, {List<String> keys}) {
+    final path = RouteParser.normalize(name, keys: keys);
+    RouteConfig.i.addRoute(Route(Method.post, path, build()));
   }
 
-  void delete(String path, Widget build, {List<String> keys}) {
-    _addRoute(Route(Method.delete, path, build, keys: keys));
+  void delete(String name, WidgetCallback build, {List<String> keys}) {
+    final path = RouteParser.normalize(name, keys: keys);
+    RouteConfig.i.addRoute(Route(Method.delete, path, build()));
   }
 
-  void put(String path, Widget build, {List<String> keys}) {
-    _addRoute(Route(Method.put, path, build, keys: keys));
+  void put(String name, WidgetCallback build, {List<String> keys}) {
+    final path = RouteParser.normalize(name, keys: keys);
+    RouteConfig.i.addRoute(Route(Method.put, path, build()));
   }
 
-  void ws(String path, Widget build, {List<String> keys}) {
-    _addRoute(Route(Method.ws, path, build, keys: keys));
+  void ws(String name, WidgetCallback build, {List<String> keys}) {
+    final path = RouteParser.normalize(name, keys: keys);
+    RouteConfig.i.addRoute(Route(Method.ws, path, build()));
   }
 }

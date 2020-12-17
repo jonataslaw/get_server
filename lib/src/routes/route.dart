@@ -1,16 +1,12 @@
-import 'dart:async';
 import 'dart:collection';
-import 'dart:convert';
 import 'dart:io';
 
-import 'package:get_instance/get_instance.dart';
-import 'package:get_server/get_server.dart';
 import 'package:jaguar_jwt/jaguar_jwt.dart';
 import 'package:meta/meta.dart';
 
+import '../../get_server.dart';
 import '../context/context_request.dart';
 import '../context/context_response.dart';
-import '../socket/socket.dart';
 
 enum Method {
   post,
@@ -24,202 +20,56 @@ enum Method {
 //typedef RouteCall<Context> = Widget<T> Function<T>(Context context);
 typedef Disposer = Function();
 
-abstract class BuildContext {
-  ContextResponse get response;
-  ContextRequest get request;
-
-  Future pageNotFound();
-
-  void statusCode(int code);
-
-  Future close();
-
-  Stream<GetSocket> get ws;
-
-  Future send(Object string);
-
-  Future sendBytes(List<int> data);
-
-  Future sendJson(Object string);
-
-  Future sendHtml(String path);
-
-  Future<MultipartUpload> file(String name, {Encoding encoder = utf8});
-
-  String param(String name) => request.param(name);
-
-  Future<Map> payload({Encoding encoder = utf8});
-}
-
 String enumValueToString(Object o) => o.toString().split('.').last;
 
 class Route {
-  final _socketController = StreamController<HttpRequest>.broadcast();
-  Stream<GetSocket> ws;
-  final Method _method;
-  final Map _path;
+  final Method method;
   final Bindings binding;
-  final bool _needAuth;
-  final Map<String, HashSet<GetSocket>> _rooms;
-  final HashSet<GetSocket> _sockets;
+  final bool needAuth;
+  final Map<String, HashSet<GetSocket>> _rooms = <String, HashSet<GetSocket>>{};
+  final HashSet<GetSocket> _sockets = HashSet<GetSocket>();
   final Widget widget;
+  final Map path;
 
   Route(
-    Method method,
-    dynamic path,
+    this.method,
+    this.path,
     this.widget, {
     this.binding,
-    List<String> keys,
-    bool needAuth = false,
-  })  : _method = method,
-        _needAuth = needAuth,
-        _rooms = (method == Method.ws ? <String, HashSet<GetSocket>>{} : null),
-        _sockets = (method == Method.ws ? HashSet<GetSocket>() : null),
-        _path = _normalize(path, keys: keys) {
-    if (_method == Method.ws) {
-      _setupWs();
-    }
+    // List<String> keys,
+    this.needAuth = false,
+  });
+
+  void handle(HttpRequest req, {int status}) {
+    var request = ContextRequest(req);
+    request.params = RouteParser.parseParams(req.uri.path, path);
+    request.response = ContextResponse(req.response);
+    if (status != null) request.response.status(status);
+
+    _verifyAuth(
+      req: request,
+      successCallback: () {
+        if (method == Method.ws) {
+          WebSocketTransformer.upgrade(req).then((sock) {
+            final getSocket = GetSocket.fromRaw(sock, _rooms, _sockets);
+            _sendResponse(request, getSocket: getSocket);
+          });
+        } else {
+          _sendResponse(request);
+        }
+      },
+    );
   }
 
-  void _setupWs() {
-    ws = _socketController.stream.transform(WebSocketTransformer()).map((ws) {
-      return GetSocket(ws, _rooms, _sockets);
-    });
-
-    // final context = BuildContext(null, socketStream: socketStream);
-    // Socket socket = call(context);
-    // context.ws.listen((event) {
-    //   socket.builder(event);
-    // });
-  }
-
-  bool match(HttpRequest req) {
-    return ((enumValueToString(_method) == req.method?.toLowerCase() ||
-            _method == Method.ws) &&
-        _path['regexp'].hasMatch(req.uri.path));
-  }
-
-  Future<void> handle(HttpRequest req, {int status}) async {
-    if (_method == Method.ws) {
-      print('method is ws');
-      var request = ContextRequest(req);
-      request.params = _parseParams(req.uri.path, _path);
-      request.response = ContextResponse(req.response);
-
-      _verifyAuth(
-        req: request,
-        successCallback: () {
-          widget.createElement(request, ws);
-          _socketController.add(req);
-        },
-      );
-    } else {
-      var request = ContextRequest(req);
-      request.params = _parseParams(req.uri.path, _path);
-      request.response = ContextResponse(req.response);
-      if (status != null) request.response.status(status);
-
-      // ignore: invalid_use_of_protected_member
-
-      // final context = BuildContext(request);
-
-      // Widget widget;
-      // final prepareWidget = call(context);
-
-      // if (prepareWidget is Future) {
-      //   widget = await prepareWidget;
-      // } else {
-      //   widget = prepareWidget;
-      // }
-
-      _verifyAuth(
-        req: request,
-        successCallback: () => _sendResponse(request),
-      );
-    }
-  }
-
-  void _sendResponse(request, [Widget failure]) async {
+  void _sendResponse(ContextRequest request,
+      {GetSocket getSocket, Widget failure}) async {
     if (failure != null) {
-      failure.createElement(request, ws);
-      return;
+      // ignore: invalid_use_of_protected_member
+      failure.createElement(request, getSocket);
     } else {
-      print('chegou no create element');
-// ignore: invalid_use_of_protected_member
-      widget.createElement(request, ws);
+      // ignore: invalid_use_of_protected_member
+      widget.createElement(request, getSocket);
     }
-
-    // if (widget is Text) {
-    //   request.response.send(widget.data);
-    // } else if (widget is Json) {
-    //   request.response.sendJson(widget.data);
-    // } else if (widget is Html) {
-    //   request.response.sendFile(widget.data);
-    // } else if (widget is HtmlText) {
-    //   request.response.sendHtmlText(widget.data);
-    // } else if (widget is WidgetBuilder) {
-    //   await widget.builder?.call(BuildContext(request));
-    // } else if (widget is GetWidget) {
-    //   final wid = await widget.build(BuildContext(request));
-    //   _sendResponse(wid, request);
-    // } else {
-    //   request.response.send(widget.data);
-    // }
-  }
-
-  static Map _normalize(
-    dynamic path, {
-    List<String> keys,
-    bool strict = false,
-  }) {
-    String stringPath = path;
-    keys ??= [];
-    if (path is RegExp) {
-      return {'regexp': path, 'keys': keys};
-    } else if (path is List) {
-      stringPath = '(${path.join('|')})';
-    }
-
-    if (!strict) {
-      stringPath += '/?';
-    }
-
-    stringPath =
-        stringPath.replaceAllMapped(RegExp(r'(\.)?:(\w+)(\?)?'), (placeholder) {
-      var replace = StringBuffer('(?:');
-
-      if (placeholder[1] != null) {
-        replace.write('\.');
-      }
-
-      replace.write('([\\w%+-._~!\$&\'()*,;=:@]+))');
-
-      if (placeholder[3] != null) {
-        replace.write('?');
-      }
-
-      keys.add(placeholder[2]);
-
-      return replace.toString();
-    }).replaceAll('//', '/');
-
-    return {'regexp': RegExp('^$stringPath\$'), 'keys': keys};
-  }
-
-  Map<String, String> _parseParams(String path, Map routePath) {
-    final params = <String, String>{};
-    Match paramsMatch = routePath['regexp'].firstMatch(path);
-    for (var i = 0; i < routePath['keys'].length; i++) {
-      String param;
-      try {
-        param = Uri.decodeQueryComponent(paramsMatch[i + 1]);
-      } catch (e) {
-        param = paramsMatch[i + 1];
-      }
-
-      params[routePath['keys'][i]] = param;
-    }
-    return params;
   }
 
   String _authHandler(ContextRequest req) {
@@ -253,7 +103,7 @@ class Route {
     @required ContextRequest req,
     @required void Function() successCallback,
   }) {
-    if (_needAuth) {
+    if (needAuth) {
       var message = _authHandler(req);
       if (message == null) {
         successCallback();
@@ -261,11 +111,75 @@ class Route {
         req.response?.status(401);
         _sendResponse(
           req,
-          Json({'success': false, 'data': null, 'error': message}),
+          failure: Json({
+            'success': false,
+            'data': null,
+            'error': message,
+          }),
         );
       }
     } else {
       successCallback();
     }
+  }
+}
+
+class RouteParser {
+  static Map normalize(
+    dynamic path, {
+    List<String> keys,
+  }) {
+    String stringPath = path;
+    keys ??= [];
+    if (path is RegExp) {
+      return {'regexp': path, 'keys': keys};
+    } else if (path is List) {
+      stringPath = '(${path.join('|')})';
+    }
+
+    stringPath += '/?';
+
+    stringPath =
+        stringPath.replaceAllMapped(RegExp(r'(\.)?:(\w+)(\?)?'), (placeholder) {
+      var replace = StringBuffer('(?:');
+
+      if (placeholder[1] != null) {
+        replace.write('\.');
+      }
+
+      replace.write('([\\w%+-._~!\$&\'()*,;=:@]+))');
+
+      if (placeholder[3] != null) {
+        replace.write('?');
+      }
+
+      keys.add(placeholder[2]);
+
+      return replace.toString();
+    }).replaceAll('//', '/');
+
+    return {'regexp': RegExp('^$stringPath\$'), 'keys': keys};
+  }
+
+  static Map<String, String> parseParams(String path, Map routePath) {
+    final params = <String, String>{};
+    Match paramsMatch = routePath['regexp'].firstMatch(path);
+    for (var i = 0; i < routePath['keys'].length; i++) {
+      String param;
+      try {
+        param = Uri.decodeQueryComponent(paramsMatch[i + 1]);
+      } catch (e) {
+        param = paramsMatch[i + 1];
+      }
+
+      params[routePath['keys'][i]] = param;
+    }
+    return params;
+  }
+
+  static bool match(String uriPath, String method, Method _method, Map path) {
+    return ((enumValueToString(_method) == method?.toLowerCase() ||
+            _method == Method.ws) &&
+        path['regexp'].hasMatch(uriPath));
   }
 }

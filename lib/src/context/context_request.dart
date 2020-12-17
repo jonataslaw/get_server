@@ -20,7 +20,7 @@ class MultipartUpload {
   dynamic toJson() => {
         'name': name,
         'mimeType': mimeType,
-        'fileBase64': '${base64Encode(data)}',
+        'fileBase64': data == null ? null : '${base64Encode(data)}',
         'transferEncoding': '$contentTransferEncoding'
       };
 
@@ -127,3 +127,63 @@ class ContextRequest {
     return completer.future;
   }
 }
+
+// class ContextRequestResolver {
+//   final HttpRequest _request;
+
+//   ContextRequestResolver(this._request);
+
+//   bool get hasContentType =>
+//       _request.headers[HttpHeaders.contentTypeHeader] != null;
+
+//   bool isMime(String type, {bool loose = true}) =>
+//       _request.headers[HttpHeaders.contentTypeHeader]
+//           .where((value) => loose ? value.contains(type) : value == type)
+//           .isNotEmpty;
+
+//   Future<ContextRequest> resolver({Encoding encoder = utf8}) async {
+//     var completer = Completer<Map>();
+
+//     if (!hasContentType) return null;
+
+//     if (isMime('application/x-www-form-urlencoded')) {
+//       const AsciiDecoder().bind(_request).listen((content) {
+//         final payload = {
+//           for (var kv in content.split('&').map((kvs) => kvs.split('=')))
+//             Uri.decodeQueryComponent(kv[0], encoding: encoder):
+//                 Uri.decodeQueryComponent(kv[1], encoding: encoder)
+//         };
+//         completer.complete(payload);
+//       });
+//     } else if (isMime('multipart/form-data', loose: true)) {
+//       var boundary = _request.headers.contentType.parameters['boundary'];
+//       final payload = {};
+//       MimeMultipartTransformer(boundary)
+//           .bind(_request)
+//           .map(HttpMultipartFormData.parse)
+//           .listen((formData) {
+//         var parameters = formData.contentDisposition.parameters;
+//         formData.listen((data) {
+//           if (formData.contentType != null) {
+//             data = MultipartUpload(
+//                 parameters['filename'],
+//                 formData.contentType.mimeType,
+//                 formData.contentTransferEncoding,
+//                 data);
+//           }
+//           payload[parameters['name']] = data;
+//         });
+//       }, onDone: () {
+//         completer.complete(payload);
+//       });
+//     } else if (isMime('application/json')) {
+//       const Utf8Decoder().bind(_request).listen((content) {
+//         final payload = jsonDecode(content);
+//         completer.complete(payload);
+//       });
+//     }
+//     final payload = await completer.future;
+
+//     return ContextRequest(_request, payload);
+//   }
+// }
