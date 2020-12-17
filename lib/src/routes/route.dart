@@ -5,7 +5,6 @@ import 'dart:io';
 
 import 'package:get_instance/get_instance.dart';
 import 'package:get_server/get_server.dart';
-import 'package:get_server/src/core/server_main.dart';
 import 'package:jaguar_jwt/jaguar_jwt.dart';
 import 'package:meta/meta.dart';
 
@@ -25,105 +24,73 @@ enum Method {
 //typedef RouteCall<Context> = Widget<T> Function<T>(Context context);
 typedef Disposer = Function();
 
-class BuildContext {
-  BuildContext(this.request, {this.socketStream});
-  ContextResponse get response => request.response;
-  final ContextRequest request;
-  final Stream<GetSocket> socketStream;
+abstract class BuildContext {
+  ContextResponse get response;
+  ContextRequest get request;
 
-  Future pageNotFound() {
-    return response.close();
-  }
+  Future pageNotFound();
 
-  void statusCode(int code) {
-    if (code == null) {
-      return;
-    }
-    response.status(code);
-  }
+  void statusCode(int code);
 
-  Future close() {
-    return response.close();
-  }
+  Future close();
 
-  Stream<GetSocket> get ws => socketStream;
+  Stream<GetSocket> get ws;
 
-  Future send(Object string) {
-    return response.send(string);
-  }
+  Future send(Object string);
 
-  Future sendBytes(List<int> data) {
-    return response.send(data);
-  }
+  Future sendBytes(List<int> data);
 
-  Future sendJson(Object string) {
-    return response
-        // this headers are not working
-        .header('Content-Type', 'application/json; charset=UTF-8')
-        .sendJson(string);
-  }
+  Future sendJson(Object string);
 
-  Future sendHtml(String path) {
-    // this headers are not working
-    response.header('Content-Type', 'text/html; charset=UTF-8');
-    return response.sendFile(path);
-  }
+  Future sendHtml(String path);
 
-  Future<MultipartUpload> file(String name, {Encoding encoder = utf8}) async {
-    final payload = await request.payload(encoder: encoder);
-    final multiPart = await payload[name];
-    return multiPart;
-  }
+  Future<MultipartUpload> file(String name, {Encoding encoder = utf8});
 
   String param(String name) => request.param(name);
 
-  Future<Map> payload({Encoding encoder = utf8}) =>
-      request.payload(encoder: encoder);
+  Future<Map> payload({Encoding encoder = utf8});
 }
 
 String enumValueToString(Object o) => o.toString().split('.').last;
 
 class Route {
-  final _socketController = StreamController<HttpRequest>();
-  Stream<GetSocket> socketStream;
+  final _socketController = StreamController<HttpRequest>.broadcast();
+  Stream<GetSocket> ws;
   final Method _method;
   final Map _path;
   final Bindings binding;
   final bool _needAuth;
-  final Map<String, HashSet<WebSocket>> _rooms;
+  final Map<String, HashSet<GetSocket>> _rooms;
   final HashSet<GetSocket> _sockets;
-  FutureOr<Widget> Function(BuildContext context) _call;
+  final Widget widget;
 
   Route(
     Method method,
     dynamic path,
-    FutureOr<Widget> Function(BuildContext context) call, {
+    this.widget, {
     this.binding,
     List<String> keys,
     bool needAuth = false,
   })  : _method = method,
         _needAuth = needAuth,
-        _rooms = (method == Method.ws ? <String, HashSet<WebSocket>>{} : null),
+        _rooms = (method == Method.ws ? <String, HashSet<GetSocket>>{} : null),
         _sockets = (method == Method.ws ? HashSet<GetSocket>() : null),
         _path = _normalize(path, keys: keys) {
     if (_method == Method.ws) {
-      _setupWs(call);
-    } else {
-      _call = call;
+      _setupWs();
     }
   }
 
-  void _setupWs(Function(BuildContext context) call) {
-    socketStream =
-        _socketController.stream.transform(WebSocketTransformer()).map((ws) {
+  void _setupWs() {
+    ws = _socketController.stream.transform(WebSocketTransformer()).map((ws) {
       return GetSocket(ws, _rooms, _sockets);
     });
 
-    final context = BuildContext(null, socketStream: socketStream);
-    Socket socket = call(context);
-    context.ws.listen((event) {
-      socket.builder(event);
-    });
+    // final context = BuildContext(null, socketStream: socketStream);
+    // Socket socket = call(context);
+    // context.ws.listen((event) {
+    //   socket.builder(event);
+    // });
   }
 
   bool match(HttpRequest req) {
@@ -134,6 +101,7 @@ class Route {
 
   Future<void> handle(HttpRequest req, {int status}) async {
     if (_method == Method.ws) {
+      print('method is ws');
       var request = ContextRequest(req);
       request.params = _parseParams(req.uri.path, _path);
       request.response = ContextResponse(req.response);
@@ -141,6 +109,7 @@ class Route {
       _verifyAuth(
         req: request,
         successCallback: () {
+          widget.createElement(request, ws);
           _socketController.add(req);
         },
       );
@@ -150,39 +119,52 @@ class Route {
       request.response = ContextResponse(req.response);
       if (status != null) request.response.status(status);
 
-      Widget widget;
-      final prepareWidget = _call(BuildContext(request));
+      // ignore: invalid_use_of_protected_member
 
-      if (prepareWidget is Future) {
-        widget = await prepareWidget;
-      } else {
-        widget = prepareWidget;
-      }
+      // final context = BuildContext(request);
+
+      // Widget widget;
+      // final prepareWidget = call(context);
+
+      // if (prepareWidget is Future) {
+      //   widget = await prepareWidget;
+      // } else {
+      //   widget = prepareWidget;
+      // }
 
       _verifyAuth(
         req: request,
-        successCallback: () => _sendResponse(widget, request),
+        successCallback: () => _sendResponse(request),
       );
     }
   }
 
-  void _sendResponse(widget, request) async {
-    if (widget is Text) {
-      request.response.send(widget.data);
-    } else if (widget is Json) {
-      request.response.sendJson(widget.data);
-    } else if (widget is Html) {
-      request.response.sendFile(widget.data);
-    } else if (widget is HtmlText) {
-      request.response.sendHtmlText(widget.data);
-    } else if (widget is WidgetBuilder) {
-      await widget.builder?.call(BuildContext(request));
-    } else if (widget is GetWidget) {
-      final wid = await widget.build(BuildContext(request));
-      _sendResponse(wid, request);
+  void _sendResponse(request, [Widget failure]) async {
+    if (failure != null) {
+      failure.createElement(request, ws);
+      return;
     } else {
-      request.response.send(widget.data);
+      print('chegou no create element');
+// ignore: invalid_use_of_protected_member
+      widget.createElement(request, ws);
     }
+
+    // if (widget is Text) {
+    //   request.response.send(widget.data);
+    // } else if (widget is Json) {
+    //   request.response.sendJson(widget.data);
+    // } else if (widget is Html) {
+    //   request.response.sendFile(widget.data);
+    // } else if (widget is HtmlText) {
+    //   request.response.sendHtmlText(widget.data);
+    // } else if (widget is WidgetBuilder) {
+    //   await widget.builder?.call(BuildContext(request));
+    // } else if (widget is GetWidget) {
+    //   final wid = await widget.build(BuildContext(request));
+    //   _sendResponse(wid, request);
+    // } else {
+    //   request.response.send(widget.data);
+    // }
   }
 
   static Map _normalize(
@@ -278,8 +260,8 @@ class Route {
       } else {
         req.response?.status(401);
         _sendResponse(
-          Json({'success': false, 'data': null, 'error': message}),
           req,
+          Json({'success': false, 'data': null, 'error': message}),
         );
       }
     } else {
