@@ -332,12 +332,16 @@ class _MultiPartWidgetState extends State<MultiPartWidget> {
   }
 }
 
+/// Use the placeholder to show something if the payload is null
 class PayloadWidget extends StatefulWidget {
+  final PayloadBuilder builder;
+  final Widget placeholder;
+
   PayloadWidget({
     Key key,
     @required this.builder,
+    this.placeholder,
   }) : super(key: key);
-  final PayloadBuilder builder;
 
   @override
   _PayloadWidgetState createState() => _PayloadWidgetState();
@@ -359,6 +363,8 @@ class _PayloadWidgetState extends State<PayloadWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return _payload == null ? WidgetEmpty() : widget.builder(context, _payload);
+    return _payload == null
+        ? widget.placeholder ?? WidgetEmpty()
+        : widget.builder(context, _payload);
   }
 }
