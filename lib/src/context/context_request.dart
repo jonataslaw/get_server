@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:http_server/http_server.dart';
 import 'package:mime/mime.dart';
 import 'context_response.dart';
+import 'dart:convert' show utf8;
 
 class MultipartUpload {
   final String name;
@@ -83,7 +84,7 @@ class ContextRequest {
   /// Get the payload (body)
   ///
   /// If don't have the contentType of payload will return null
-  Future<Map> payload({Encoding encoder = utf8}) {
+  Future<Map> payload({Encoding encoder = utf8}) async {
     var completer = Completer<Map>();
 
     if (!hasContentType) return null;
@@ -119,11 +120,11 @@ class ContextRequest {
         completer.complete(payload);
       });
     } else if (isMime('application/json')) {
-      const Utf8Decoder().bind(_request).listen((content) {
-        final payload = jsonDecode(content);
-        completer.complete(payload);
-      });
+      final content = await utf8.decodeStream(_request);
+      final payload = jsonDecode(content);
+      completer.complete(payload);
     }
+
     return completer.future;
   }
 }

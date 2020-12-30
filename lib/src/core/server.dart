@@ -6,6 +6,7 @@ import 'dart:io';
 import 'dart:isolate';
 import 'package:get_core/get_core.dart';
 import 'package:get_rx/get_rx.dart';
+import 'package:get_server/src/core/src/models/response_base.model.dart';
 import 'package:get_server/src/infrastructure/getx_controller.dart';
 import 'package:http_server/http_server.dart';
 import 'package:jaguar_jwt/jaguar_jwt.dart';
