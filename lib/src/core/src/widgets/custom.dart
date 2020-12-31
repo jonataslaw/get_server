@@ -333,32 +333,61 @@ class _MultiPartWidgetState extends State<MultiPartWidget> {
 }
 
 class PayloadWidget extends StatefulWidget {
-  PayloadWidget({
+  final PayloadBuilder builder;
+  final bool payloadRequired;
+  const PayloadWidget({
     Key key,
     @required this.builder,
+    this.payloadRequired = true,
   }) : super(key: key);
-  final PayloadBuilder builder;
 
   @override
   _PayloadWidgetState createState() => _PayloadWidgetState();
 }
 
 class _PayloadWidgetState extends State<PayloadWidget> {
+  Map _payload;
+  Widget _error;
+  bool visible = false;
+
   @override
   void initState() {
     _decoderFile();
     super.initState();
   }
 
-  Map _payload;
-
   Future<void> _decoderFile() async {
-    _payload = await context.payload();
-    setState(() {});
+    try {
+      _payload = await context.payload();
+      if (widget.payloadRequired && _payload == null) {
+        _error = Error(error: 'Payload is required!');
+      }
+    } catch (err) {
+      _error = Error(error: 'Failed to decode the payload!');
+    }
+
+    setState(() => visible = true);
   }
 
   @override
   Widget build(BuildContext context) {
-    return _payload == null ? WidgetEmpty() : widget.builder(context, _payload);
+    return visible
+        ? _error ?? widget.builder(context, _payload)
+        : WidgetEmpty();
+  }
+}
+
+class Error extends StatelessWidget {
+  final String error;
+
+  const Error({
+    Key key,
+    @required this.error,
+  })  : assert(error != null),
+        super();
+
+  @override
+  Widget build(BuildContext context) {
+    return Json(ResponseBaseModel(error: error, success: false, data: null));
   }
 }
