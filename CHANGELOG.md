@@ -1,5 +1,6 @@
 # [0.90.1] - Release candidate 2
-* After a change in the whole structure
+* Fix payload crashs
+* Added FutureBuilder
 
 # [0.90.0] - Release candidate 1
 * After a change in the whole structure, and trying GetServer for 1 month in a real application, we are launching release candidate 1. This version is one of the candidates for the Stable version.
