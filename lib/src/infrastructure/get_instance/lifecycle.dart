@@ -43,7 +43,7 @@ mixin GetLifeCycle {
   /// It uses an internal "callable" type, to avoid any @overrides in subclases.
   /// This method should be internal and is required to define the
   /// lifetime cycle of the subclass.
-  @internal
+  // @internal
   void onStart() {
     if (_initialized) return;
     onInit();
@@ -57,7 +57,7 @@ mixin GetLifeCycle {
   bool get isClosed => _isClosed;
 
   // Internal callback that starts the cycle of this controller.
-  @internal
+  // @internal
   void onDelete() {
     if (_isClosed) return;
     _isClosed = true;

@@ -133,31 +133,33 @@ class GetServer with NodeMode {
         if (route != null) {
           route.handle(req);
         } else {
-          if (_public != null) {
-            _virtualDirectory ??= VirtualDirectory(
-              _public.folder,
-              // pathPrefix: public.path,
-            )
-              ..allowDirectoryListing = _public.allowDirectoryListing
-              ..jailRoot = _public.jailRoot
-              ..followLinks = _public.followLinks
-              ..errorPageHandler = (callback) {
-                _onNotFound(
-                  callback,
-                  onNotFound,
-                );
-              }
-              ..directoryHandler = (dir, req) {
-                var indexUri = Uri.file(dir.path).resolve('index.html');
-                _virtualDirectory.serveFile(File(indexUri.toFilePath()), req);
-              };
+          if (req.method.toLowerCase() != 'options') {
+            if (_public != null) {
+              _virtualDirectory ??= VirtualDirectory(
+                _public.folder,
+                // pathPrefix: public.path,
+              )
+                ..allowDirectoryListing = _public.allowDirectoryListing
+                ..jailRoot = _public.jailRoot
+                ..followLinks = _public.followLinks
+                ..errorPageHandler = (callback) {
+                  _onNotFound(
+                    callback,
+                    onNotFound,
+                  );
+                }
+                ..directoryHandler = (dir, req) {
+                  var indexUri = Uri.file(dir.path).resolve('index.html');
+                  _virtualDirectory.serveFile(File(indexUri.toFilePath()), req);
+                };
 
-            _virtualDirectory.serveRequest(req);
-          } else {
-            _onNotFound(
-              req,
-              onNotFound,
-            );
+              _virtualDirectory.serveRequest(req);
+            } else {
+              _onNotFound(
+                req,
+                onNotFound,
+              );
+            }
           }
         }
       },
