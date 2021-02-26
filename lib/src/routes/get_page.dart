@@ -10,7 +10,7 @@ class GetPage {
   final Map path;
 
   GetPage({
-    this.method = Method.get,
+    this.method = Method.dynamic,
     this.name = '/',
     this.page,
     this.binding,

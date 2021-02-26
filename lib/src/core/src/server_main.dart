@@ -8,9 +8,16 @@ void runIsolate(void Function(dynamic) isol) {
   }
 }
 
-void runApp(GetServer server) {
-  server.start();
-  return;
+void runApp(Widget widget) {
+  if (widget is GetServer) {
+    widget.build(null);
+  } else {
+    GetServer(
+      port: 8080,
+      cors: true,
+      home: widget,
+    ).build(null);
+  }
 }
 
 class FolderWidget extends StatelessWidget {
@@ -55,7 +62,7 @@ class Public {
   });
 }
 
-class GetServer with NodeMode {
+class GetServer extends StatelessWidget with NodeMode {
   HttpServer _server;
   VirtualDirectory _virtualDirectory;
   final List<GetPage> _getPages;
@@ -216,5 +223,11 @@ class GetServer with NodeMode {
     req.response
       ..statusCode = HttpStatus.notFound
       ..close();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    start();
+    return WidgetEmpty();
   }
 }

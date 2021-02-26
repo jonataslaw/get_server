@@ -1,3 +1,6 @@
+# [0.90.2] - Release candidate 3
+* Transform GetServer on widget
+
 # [0.90.1] - Release candidate 2
 * Fix payload crashs
 * Added FutureBuilder

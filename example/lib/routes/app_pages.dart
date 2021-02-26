@@ -18,6 +18,7 @@ mixin AppPages {
     GetPage(
       name: Routes.HOME,
       page: () => HomePage(),
+      method: Method.get,
     ),
     GetPage(
       name: Routes.USER,

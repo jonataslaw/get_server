@@ -15,6 +15,7 @@ enum Method {
   delete,
   ws,
   options,
+  dynamic,
 }
 
 //typedef RouteCall<Context> = Widget<T> Function<T>(Context context);
@@ -23,7 +24,6 @@ typedef Disposer = Function();
 String enumValueToString(Object o) => o.toString().split('.').last;
 
 class Route {
-  final Method method;
   final Bindings binding;
   final bool needAuth;
   final Map<String, HashSet<GetSocket>> _rooms = <String, HashSet<GetSocket>>{};
@@ -40,8 +40,35 @@ class Route {
     this.needAuth = false,
   });
 
+  final Method method;
+
+  Method _reqMethod(HttpRequest req) {
+    if (req.headers.value('connection')?.toLowerCase() == 'upgrade') {
+      return Method.ws;
+    }
+    if (req.method.toLowerCase() == 'get') {
+      return Method.get;
+    } else if (req.method.toLowerCase() == 'post') {
+      return Method.post;
+    } else if (req.method.toLowerCase() == 'put') {
+      return Method.put;
+    } else if (req.method.toLowerCase() == 'delete') {
+      return Method.delete;
+    } else if (req.method.toLowerCase() == 'option') {
+      return Method.options;
+    } else {
+      return Method.get;
+    }
+  }
+
   void handle(HttpRequest req, {int status}) {
-    var request = ContextRequest(req);
+    var localMethod = method;
+
+    if (method == Method.dynamic) {
+      localMethod = _reqMethod(req);
+    }
+    var request = ContextRequest(req, localMethod);
+
     request.params = RouteParser.parseParams(req.uri.path, path);
     request.response = ContextResponse(req.response);
     if (status != null) request.response.status(status);
@@ -49,7 +76,7 @@ class Route {
     _verifyAuth(
       req: request,
       successCallback: () {
-        if (method == Method.ws) {
+        if (localMethod == Method.ws) {
           WebSocketTransformer.upgrade(req).then((sock) {
             final getSocket = GetSocket.fromRaw(sock, _rooms, _sockets);
             _sendResponse(request, getSocket: getSocket);
@@ -179,7 +206,7 @@ class RouteParser {
 
   static bool match(String uriPath, String method, Method _method, Map path) {
     return ((enumValueToString(_method) == method?.toLowerCase() ||
-            _method == Method.ws) &&
+            _method == Method.dynamic) &&
         path['regexp'].hasMatch(uriPath));
   }
 }
