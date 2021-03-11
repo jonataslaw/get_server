@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http_server/http_server.dart';
 import 'package:mime/mime.dart';
+import '../../get_server.dart';
 import 'context_response.dart';
 import 'dart:convert' show utf8;
 
@@ -31,9 +32,10 @@ class MultipartUpload {
 
 class ContextRequest {
   final HttpRequest _request;
+  final Method requestMethod;
   ContextResponse response;
 
-  ContextRequest(this._request);
+  ContextRequest(this._request, this.requestMethod);
 
   List header(String name) => _request.headers[name.toLowerCase()];
 

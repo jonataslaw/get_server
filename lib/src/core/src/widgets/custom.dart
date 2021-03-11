@@ -328,10 +328,7 @@ class _MultiPartWidgetState extends State<MultiPartWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Visibility(
-      visible: _upload != null,
-      child: widget.builder(context, _upload),
-    );
+    return _upload != null ? widget.builder(context, _upload) : WidgetEmpty();
   }
 }
 
@@ -374,10 +371,9 @@ class _PayloadWidgetState extends State<PayloadWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Visibility(
-      visible: visible,
-      child: _error ?? widget.builder(context, _payload),
-    );
+    return !visible
+        ? WidgetEmpty()
+        : _error ?? widget.builder(context, _payload);
   }
 }
 

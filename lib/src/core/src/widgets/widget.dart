@@ -4,6 +4,8 @@ abstract class BuildContext {
   ContextResponse get response;
   ContextRequest get request;
 
+  Method get method;
+
   Future pageNotFound();
 
   void statusCode(int code);
@@ -163,6 +165,9 @@ class StatelessElement extends ComponentElement {
 
   @override
   Widget build() => widget.build(this);
+
+  @override
+  Method get method => request.requestMethod;
 }
 
 abstract class ComponentElement extends Element {
@@ -234,6 +239,9 @@ class StatefulElement extends ComponentElement {
     state._element = null;
     state._widget = null;
   }
+
+  @override
+  Method get method => request.requestMethod;
 }
 
 abstract class State<T extends StatefulWidget> {
