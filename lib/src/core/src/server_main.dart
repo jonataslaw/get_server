@@ -204,7 +204,7 @@ class GetServer extends StatelessWidget with NodeMode {
   void addCorsHeaders(HttpResponse response, String corsUrl) {
     response.headers.add('Access-Control-Allow-Origin', corsUrl);
     response.headers
-        .add('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE');
+        .add('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
     response.headers.add('Access-Control-Allow-Headers',
         'access-control-allow-origin,content-type,x-access-token,authorization');
   }
