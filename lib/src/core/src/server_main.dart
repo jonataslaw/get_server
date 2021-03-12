@@ -132,8 +132,9 @@ class GetServer extends StatelessWidget with NodeMode {
         if (cors) {
           addCorsHeaders(req.response, corsUrl);
           if (req.method.toLowerCase() == 'options') {
-            var msg = {'status': 'ok'};
-            req.response.write(json.encode(msg));
+            // #var msg = {'status': 'ok'};
+            // req.response.write(json.encode(msg));
+            req.response.statusCode = 204;
             req.response.close();
           }
         }
@@ -204,7 +205,7 @@ class GetServer extends StatelessWidget with NodeMode {
   void addCorsHeaders(HttpResponse response, String corsUrl) {
     response.headers.add('Access-Control-Allow-Origin', corsUrl);
     response.headers
-        .add('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+        .add('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE');
     response.headers.add('Access-Control-Allow-Headers',
         'access-control-allow-origin,content-type,x-access-token,authorization');
   }
