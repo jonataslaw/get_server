@@ -132,7 +132,7 @@ class GetServer extends StatelessWidget with NodeMode {
         if (cors) {
           addCorsHeaders(req.response, corsUrl);
           if (req.method.toLowerCase() == 'options') {
-            // #var msg = {'status': 'ok'};
+            // var msg = {'status': 'ok'};
             // req.response.write(json.encode(msg));
             req.response.statusCode = 204;
             req.response.close();
