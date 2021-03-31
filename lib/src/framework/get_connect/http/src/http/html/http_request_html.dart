@@ -39,7 +39,7 @@ class HttpRequestImpl implements HttpRequestBase {
     request.headers.forEach(xhr.setRequestHeader);
 
     var completer = Completer<Response<T>>();
-    xhr.onLoad.first.then((_) {
+    await xhr.onLoad.first.then((_) {
       var blob = xhr.response as html.Blob? ?? html.Blob([]);
       var reader = html.FileReader();
 
@@ -85,7 +85,7 @@ class HttpRequestImpl implements HttpRequestBase {
       reader.readAsArrayBuffer(blob);
     });
 
-    xhr.onError.first.then((_) {
+    await xhr.onError.first.then((_) {
       completer.completeError(
           GetHttpException('XMLHttpRequest error.', request.url),
           StackTrace.current);

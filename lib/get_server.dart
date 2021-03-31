@@ -6,3 +6,7 @@ export 'src/routes/get_page.dart';
 export 'src/routes/route.dart';
 export 'src/socket/socket.dart';
 export 'src/widgets/pageable.dart';
+export 'src/framework/get_connect/connect.dart';
+export 'src/framework/get_utils/get_utils.dart';
+export 'src/framework/get_rx/get_rx.dart';
+export 'src/framework/get_instance/get_instance.dart';

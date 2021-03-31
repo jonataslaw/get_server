@@ -68,7 +68,7 @@ class GetUtils {
   /// "value":value==null?null:value; someVar.nil will force the null type
   /// if the var is null or undefined.
   /// `nil` taken from ObjC just to have a shorter sintax.
-  static dynamic nil(dynamic s) => s == null ? null : s;
+  // static dynamic nil(dynamic s) => s ?? null;
 
   /// Checks if data is null or blank (empty or only contains whitespace).
   static bool? isNullOrBlank(dynamic value) {
@@ -118,86 +118,86 @@ class GetUtils {
   static bool isVideo(String filePath) {
     var ext = filePath.toLowerCase();
 
-    return ext.endsWith(".mp4") ||
-        ext.endsWith(".avi") ||
-        ext.endsWith(".wmv") ||
-        ext.endsWith(".rmvb") ||
-        ext.endsWith(".mpg") ||
-        ext.endsWith(".mpeg") ||
-        ext.endsWith(".3gp");
+    return ext.endsWith('.mp4') ||
+        ext.endsWith('.avi') ||
+        ext.endsWith('.wmv') ||
+        ext.endsWith('.rmvb') ||
+        ext.endsWith('.mpg') ||
+        ext.endsWith('.mpeg') ||
+        ext.endsWith('.3gp');
   }
 
   /// Checks if string is an image file.
   static bool isImage(String filePath) {
     final ext = filePath.toLowerCase();
 
-    return ext.endsWith(".jpg") ||
-        ext.endsWith(".jpeg") ||
-        ext.endsWith(".png") ||
-        ext.endsWith(".gif") ||
-        ext.endsWith(".bmp");
+    return ext.endsWith('.jpg') ||
+        ext.endsWith('.jpeg') ||
+        ext.endsWith('.png') ||
+        ext.endsWith('.gif') ||
+        ext.endsWith('.bmp');
   }
 
   /// Checks if string is an audio file.
   static bool isAudio(String filePath) {
     final ext = filePath.toLowerCase();
 
-    return ext.endsWith(".mp3") ||
-        ext.endsWith(".wav") ||
-        ext.endsWith(".wma") ||
-        ext.endsWith(".amr") ||
-        ext.endsWith(".ogg");
+    return ext.endsWith('.mp3') ||
+        ext.endsWith('.wav') ||
+        ext.endsWith('.wma') ||
+        ext.endsWith('.amr') ||
+        ext.endsWith('.ogg');
   }
 
   /// Checks if string is an powerpoint file.
   static bool isPPT(String filePath) {
     final ext = filePath.toLowerCase();
 
-    return ext.endsWith(".ppt") || ext.endsWith(".pptx");
+    return ext.endsWith('.ppt') || ext.endsWith('.pptx');
   }
 
   /// Checks if string is an word file.
   static bool isWord(String filePath) {
     final ext = filePath.toLowerCase();
 
-    return ext.endsWith(".doc") || ext.endsWith(".docx");
+    return ext.endsWith('.doc') || ext.endsWith('.docx');
   }
 
   /// Checks if string is an excel file.
   static bool isExcel(String filePath) {
     final ext = filePath.toLowerCase();
 
-    return ext.endsWith(".xls") || ext.endsWith(".xlsx");
+    return ext.endsWith('.xls') || ext.endsWith('.xlsx');
   }
 
   /// Checks if string is an apk file.
   static bool isAPK(String filePath) {
-    return filePath.toLowerCase().endsWith(".apk");
+    return filePath.toLowerCase().endsWith('.apk');
   }
 
   /// Checks if string is an pdf file.
   static bool isPDF(String filePath) {
-    return filePath.toLowerCase().endsWith(".pdf");
+    return filePath.toLowerCase().endsWith('.pdf');
   }
 
   /// Checks if string is an txt file.
   static bool isTxt(String filePath) {
-    return filePath.toLowerCase().endsWith(".txt");
+    return filePath.toLowerCase().endsWith('.txt');
   }
 
   /// Checks if string is an chm file.
   static bool isChm(String filePath) {
-    return filePath.toLowerCase().endsWith(".chm");
+    return filePath.toLowerCase().endsWith('.chm');
   }
 
   /// Checks if string is a vector file.
   static bool isVector(String filePath) {
-    return filePath.toLowerCase().endsWith(".svg");
+    return filePath.toLowerCase().endsWith('.svg');
   }
 
   /// Checks if string is an html file.
   static bool isHTML(String filePath) {
-    return filePath.toLowerCase().endsWith(".html");
+    return filePath.toLowerCase().endsWith('.html');
   }
 
   /// Checks if string is a valid username.
@@ -257,8 +257,8 @@ class GetUtils {
   static bool isPalindrom(String string) {
     final cleanString = string
         .toLowerCase()
-        .replaceAll(RegExp(r"\s+"), '')
-        .replaceAll(RegExp(r"[^0-9a-zA-Z]+"), "");
+        .replaceAll(RegExp(r'\s+'), '')
+        .replaceAll(RegExp(r'[^0-9a-zA-Z]+'), '');
 
     for (var i = 0; i < cleanString.length; i++) {
       if (cleanString[i] != cleanString[cleanString.length - i - 1]) {
@@ -562,7 +562,7 @@ class GetUtils {
       if (isNumericOnly(s[i])) {
         numericOnlyStr += s[i];
       }
-      if (firstWordOnly && numericOnlyStr.isNotEmpty && s[i] == " ") {
+      if (firstWordOnly && numericOnlyStr.isNotEmpty && s[i] == ' ') {
         break;
       }
     }

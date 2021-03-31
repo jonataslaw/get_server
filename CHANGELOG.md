@@ -1,3 +1,7 @@
+# [1.0.0]
+- Added Get_Utils, Internationalization, GetConnect client, Rx methods.
+- migrate to null-safety
+
 # [0.90.2] - Release candidate 3
 * Transform GetServer on widget
 

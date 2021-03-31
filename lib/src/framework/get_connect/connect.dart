@@ -13,7 +13,7 @@ export 'http/src/response/response.dart';
 export 'sockets/sockets.dart';
 
 abstract class GetConnectInterface with GetLifeCycleBase {
-  List<GetSocket>? sockets;
+  List<GetSocketClient>? sockets;
   GetHttpClient get httpClient;
 
   Future<Response<T>> get<T>(
@@ -83,7 +83,7 @@ abstract class GetConnectInterface with GetLifeCycleBase {
     Map<String, String>? headers,
   });
 
-  GetSocket socket(
+  GetSocketClient socket(
     String url, {
     Duration ping = const Duration(seconds: 5),
   });
@@ -112,10 +112,10 @@ class GetConnect extends GetConnectInterface {
   Duration timeout;
   List<TrustedCertificate>? trustedCertificates;
   GetHttpClient? _httpClient;
-  List<GetSocket>? _sockets;
+  List<GetSocketClient>? _sockets;
 
   @override
-  List<GetSocket> get sockets => _sockets ??= <GetSocket>[];
+  List<GetSocketClient> get sockets => _sockets ??= <GetSocketClient>[];
 
   @override
   GetHttpClient get httpClient => _httpClient ??= GetHttpClient(
@@ -256,13 +256,13 @@ class GetConnect extends GetConnectInterface {
   }
 
   @override
-  GetSocket socket(
+  GetSocketClient socket(
     String url, {
     Duration ping = const Duration(seconds: 5),
   }) {
     _checkIfDisposed(isHttp: false);
 
-    final _socket = GetSocket(_concatUrl(url)!, ping: ping);
+    final _socket = GetSocketClient(_concatUrl(url)!, ping: ping);
     sockets.add(_socket);
     return _socket;
   }

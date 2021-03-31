@@ -229,7 +229,7 @@ class GetHttpClient {
           headers: null,
           statusCode: null,
           body: null,
-          statusText: "$err",
+          statusText: '$err',
         );
       }
     }
