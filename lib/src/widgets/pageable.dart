@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:get_server/get_server.dart';
 
+import '../../get_server.dart';
+
 // this this widget to make pagination simple and easy
 // ignore: must_be_immutable
 class Pageable extends GetWidget {
@@ -15,11 +17,11 @@ class Pageable extends GetWidget {
     if (pageparam != null) {
       var _page = int.tryParse(pageparam);
       if (_page == null) {
-        context.response.status(HttpStatus.badRequest).sendJson(_Erro(
+        context.response!.status(HttpStatus.badRequest).sendJson(_Erro(
             errocode: HttpStatus.badRequest,
             description:
                 'The page parameter must receive an int: $pageparam it\'s not an int'));
-        return null;
+        return WidgetEmpty();
       }
       page = _page;
     }
@@ -28,11 +30,11 @@ class Pageable extends GetWidget {
     if (sizeparam != null) {
       var _size = int.tryParse(sizeparam);
       if (_size == null) {
-        context.response.status(HttpStatus.badRequest).sendJson(_Erro(
+        context.response!.status(HttpStatus.badRequest).sendJson(_Erro(
             errocode: HttpStatus.badRequest,
             description:
                 'The size parameter must receive an int: $sizeparam it\'s not an int'));
-        return null;
+        return WidgetEmpty();
       }
       size = _size;
     }
@@ -44,11 +46,11 @@ class Pageable extends GetWidget {
     totalPages = totalPages == 0 ? 1 : totalPages;
 
     if (totalPages < page) {
-      context.response.status(HttpStatus.badRequest).sendJson(_Erro(
+      context.response!.status(HttpStatus.badRequest).sendJson(_Erro(
           errocode: HttpStatus.badRequest,
           description:
               'The reported page is larger than the maximum page: report something between 1 and $totalPages'));
-      return null;
+      return WidgetEmpty();
     }
 
     final result = list.sublist(
@@ -66,11 +68,11 @@ class Pageable extends GetWidget {
 }
 
 class _Pageable {
-  List<dynamic> content;
-  int size;
-  int totalElements;
-  int totalPages;
-  int currentPage;
+  List<dynamic>? content;
+  int? size;
+  int? totalElements;
+  int? totalPages;
+  int? currentPage;
 
   _Pageable(
       {this.content,
@@ -88,7 +90,7 @@ class _Pageable {
           content is List<DateTime>) {
         data['content'] = content;
       } else {
-        data['content'] = content.map((v) => v.toJson()).toList();
+        data['content'] = content!.map((v) => v.toJson()).toList();
       }
     }
     data['size'] = size;
@@ -100,8 +102,8 @@ class _Pageable {
 }
 
 class _Erro {
-  int errocode;
-  String description;
+  int? errocode;
+  String? description;
 
   _Erro({this.errocode, this.description});
 

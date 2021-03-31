@@ -1,7 +1,7 @@
 part of server;
 
 abstract class GetView<T> extends StatelessWidget {
-  final String tag = null;
+  final String? tag = null;
 
   T get controller => GetInstance().find<T>(tag: tag);
   @override
@@ -9,7 +9,7 @@ abstract class GetView<T> extends StatelessWidget {
 }
 
 abstract class GetEndpoint<T> extends StatelessWidget {
-  final String tag = null;
+  final String? tag = null;
 
   T get controller => GetInstance().find<T>(tag: tag);
   @override
@@ -17,24 +17,24 @@ abstract class GetEndpoint<T> extends StatelessWidget {
 }
 
 class _Wrapper<T> {
-  T data;
+  T? data;
 }
 
 abstract class GetWidget<T> extends StatelessWidget {
   final _value = _Wrapper<T>();
 
-  final String tag = null;
+  final String? tag = null;
 
-  T get controller {
+  T? get controller {
     _value.data ??= GetInstance().find<T>(tag: tag);
     return _value.data;
   }
 }
 
 class WidgetEmpty extends Widget {
-  const WidgetEmpty({Key key}) : super(key: key);
+  const WidgetEmpty({Key? key}) : super(key: key);
   @override
-  Element createElement(a, b) {
+  Element? createElement(a, b) {
     return null;
   }
 }
@@ -46,7 +46,7 @@ class WidgetResponse extends StatelessWidget {
     this.headers,
   });
   final int statusCode;
-  final Map headers;
+  final Map? headers;
 
   final Widget child;
 
@@ -60,58 +60,56 @@ class WidgetResponse extends StatelessWidget {
 }
 
 class PageRedirect extends StatelessWidget {
-  PageRedirect({@required this.redirectUrl, this.statusCode = 302});
+  PageRedirect({required this.redirectUrl, this.statusCode = 302});
   final String redirectUrl;
   final int statusCode;
 
   @override
   Widget build(BuildContext context) {
-    context.request.response.redirect(redirectUrl, statusCode);
+    context.request.response!.redirect(redirectUrl, statusCode);
     return WidgetEmpty();
   }
 }
 
 class StatusCode extends StatelessWidget {
-  StatusCode({@required this.child, @required this.statusCode});
+  StatusCode({required this.child, required this.statusCode});
   final Widget child;
   final int statusCode;
 
   @override
   Widget build(BuildContext context) {
-    context.request.response.status(statusCode);
+    context.request.response!.status(statusCode);
     return child;
   }
 }
 
 class HeaderWidget extends StatelessWidget {
-  HeaderWidget(
-      {@required this.child, @required this.name, @required this.value});
+  HeaderWidget({required this.child, required this.name, required this.value});
   final Widget child;
   final String name;
   final Object value;
 
   @override
   Widget build(BuildContext context) {
-    if (key != null && value != null) {
-      context.request.response.header(name, value);
-    }
+    context.request.response!.header(name, value);
+
     return child;
   }
 }
 
 class FullHeadersWidget extends StatelessWidget {
   FullHeadersWidget({
-    @required this.child,
-    @required this.headers,
+    required this.child,
+    required this.headers,
   });
   final Widget child;
-  final Map headers;
+  final Map? headers;
 
   @override
   Widget build(BuildContext context) {
     if (headers != null) {
-      headers.forEach((key, value) {
-        context.request.response.header(key, value);
+      headers!.forEach((key, value) {
+        context.request.response!.header(key, value);
       });
     }
     return child;
@@ -122,10 +120,10 @@ abstract class SenderWidget extends StatelessWidget {}
 
 class Html extends SenderWidget {
   final String path;
-  Html({@required this.path});
+  Html({required this.path});
   @override
   Widget build(BuildContext context) {
-    context.response.sendFile(path);
+    context.response!.sendFile(path);
     return WidgetEmpty();
   }
 }
@@ -147,7 +145,7 @@ class Text extends SenderWidget {
 
   @override
   Widget build(BuildContext context) {
-    context.request.response.send(text);
+    context.request.response!.send(text);
     return WidgetEmpty();
   }
 }
@@ -158,7 +156,7 @@ class HtmlText extends SenderWidget {
 
   @override
   Widget build(BuildContext context) {
-    context.response.sendHtmlText(content);
+    context.response!.sendHtmlText(content);
     return WidgetEmpty();
   }
 }
@@ -168,7 +166,7 @@ class Json extends SenderWidget {
   Json(this.content);
   @override
   Widget build(BuildContext context) {
-    context.response.sendJson(content);
+    context.response!.sendJson(content);
     return WidgetEmpty();
   }
 }
@@ -178,15 +176,15 @@ typedef WidgetBuilderCallback = Widget Function(BuildContext context);
 typedef SocketBuilder = void Function(GetSocket socket);
 
 class Socket extends SenderWidget {
-  Socket({@required this.builder});
+  Socket({required this.builder});
   final SocketBuilder builder;
   @override
   Widget build(BuildContext context) {
-    var event = context.getSocket;
+    GetSocket? event = context.getSocket!;
     event.rawSocket.done.then((value) {
       event = null;
     });
-    builder(event);
+    builder(event!);
 
     return WidgetEmpty();
   }
@@ -196,7 +194,7 @@ class WidgetBuilder extends StatelessWidget {
   final WidgetBuilderCallback builder;
 
   const WidgetBuilder({
-    @required this.builder,
+    required this.builder,
   });
 
   @override
@@ -206,7 +204,7 @@ class WidgetBuilder extends StatelessWidget {
 typedef WidgetCallback = Widget Function();
 
 abstract class ObxWidget extends StatefulWidget {
-  const ObxWidget() : super();
+  const ObxWidget({Key? key}) : super(key: key);
 
   @override
   _ObxState createState() => _ObxState();
@@ -216,31 +214,37 @@ abstract class ObxWidget extends StatefulWidget {
 }
 
 class _ObxState extends State<ObxWidget> {
-  RxInterface _observer;
-  StreamSubscription subs;
+  RxInterface? _observer;
+  late StreamSubscription subs;
 
   _ObxState() {
-    _observer = Rx();
+    _observer = RxNotifier();
   }
 
   @override
   void initState() {
-    subs = _observer.listen((data) => setState(() {}));
+    subs = _observer!.listen(_updateTree);
     super.initState();
+  }
+
+  void _updateTree(_) {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
   void dispose() {
     subs.cancel();
-    _observer.close();
+    _observer!.close();
     super.dispose();
   }
 
   Widget get notifyChilds {
-    final observer = getObs;
-    getObs = _observer;
+    final observer = RxInterface.proxy;
+    RxInterface.proxy = _observer;
     final result = widget.build();
-    if (!_observer.canUpdate) {
+    if (!_observer!.canUpdate) {
       throw '''
       [Get] the improper use of a GetX has been detected. 
       You should only use GetX or Obx for the specific widget that will be updated.
@@ -250,7 +254,7 @@ class _ObxState extends State<ObxWidget> {
       If you need to update a parent widget and a child widget, wrap each one in an Obx/GetX.
       ''';
     }
-    getObs = observer;
+    RxInterface.proxy = observer;
     return result;
   }
 
@@ -276,14 +280,11 @@ class Obx extends ObxWidget {
 
 class Visibility extends StatelessWidget {
   const Visibility({
-    Key key,
-    @required this.child,
+    Key? key,
+    required this.child,
     this.replacement = const WidgetEmpty(),
     this.visible = true,
-  })  : assert(child != null),
-        assert(replacement != null),
-        assert(visible != null),
-        super();
+  }) : super(key: key);
 
   final Widget child;
   final Widget replacement;
@@ -296,15 +297,15 @@ class Visibility extends StatelessWidget {
 }
 
 typedef MultiPartBuilder = Widget Function(
-    BuildContext context, MultipartUpload file);
+    BuildContext context, MultipartUpload? file);
 
-typedef PayloadBuilder = Widget Function(BuildContext context, Map payload);
+typedef PayloadBuilder = Widget Function(BuildContext context, Map? payload);
 
 class MultiPartWidget extends StatefulWidget {
   MultiPartWidget({
-    Key key,
+    Key? key,
     this.name = 'file',
-    @required this.builder,
+    required this.builder,
   }) : super(key: key);
   final MultiPartBuilder builder;
   final String name;
@@ -319,7 +320,7 @@ class _MultiPartWidgetState extends State<MultiPartWidget> {
     super.initState();
   }
 
-  MultipartUpload _upload;
+  MultipartUpload? _upload;
 
   Future<void> _decoderFile() async {
     _upload = await context.file(widget.name);
@@ -336,8 +337,8 @@ class PayloadWidget extends StatefulWidget {
   final PayloadBuilder builder;
   final bool payloadRequired;
   const PayloadWidget({
-    Key key,
-    @required this.builder,
+    Key? key,
+    required this.builder,
     this.payloadRequired = true,
   }) : super(key: key);
 
@@ -346,8 +347,8 @@ class PayloadWidget extends StatefulWidget {
 }
 
 class _PayloadWidgetState extends State<PayloadWidget> {
-  Map _payload;
-  Widget _error;
+  Map? _payload;
+  Widget? _error;
   bool visible = false;
 
   @override
@@ -381,10 +382,9 @@ class Error extends StatelessWidget {
   final String error;
 
   const Error({
-    Key key,
-    @required this.error,
-  })  : assert(error != null),
-        super();
+    Key? key,
+    required this.error,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -404,19 +404,18 @@ class FutureBuilder<T> extends StatefulWidget {
   ///
   /// The [builder] must not be null.
   const FutureBuilder({
-    Key key,
+    Key? key,
     this.future,
     this.initialData,
-    @required this.builder,
-  })  : assert(builder != null),
-        super(key: key);
+    required this.builder,
+  }) : super(key: key);
 
   /// The asynchronous computation to which this builder is currently connected,
   /// possibly null.
   ///
   /// If no future has yet completed, including in the case where [future] is
   /// null, the data provided to the [builder] will be set to [initialData].
-  final Future<T> future;
+  final Future<T>? future;
 
   /// The build strategy currently used by this builder.
   ///
@@ -450,36 +449,36 @@ class FutureBuilder<T> extends StatefulWidget {
   /// provided to the [builder] will become null, regardless of [initialData].
   /// (The error itself will be available in [AsyncSnapshot.error], and
   /// [AsyncSnapshot.hasError] will be true.)
-  final T initialData;
+  final T? initialData;
 
   @override
-  State<FutureBuilder<T>> createState() => _FutureBuilderState<T>();
+  State<FutureBuilder<T?>> createState() => _FutureBuilderState<T>();
 }
 
 /// State for [FutureBuilder].
-class _FutureBuilderState<T> extends State<FutureBuilder<T>> {
+class _FutureBuilderState<T> extends State<FutureBuilder<T?>> {
   /// An object that identifies the currently active callbacks. Used to avoid
   /// calling setState from stale callbacks, e.g. after disposal of this state,
   /// or after widget reconfiguration to a new Future.
-  Object _activeCallbackIdentity;
-  AsyncSnapshot<T> _snapshot;
+  Object? _activeCallbackIdentity;
+  AsyncSnapshot<T?>? _snapshot;
 
   @override
   void initState() {
     super.initState();
     _snapshot = widget.initialData == null
         ? AsyncSnapshot<T>.nothing()
-        : AsyncSnapshot<T>.withData(ConnectionState.none, widget.initialData);
+        : AsyncSnapshot<T?>.withData(ConnectionState.none, widget.initialData);
     _subscribe();
   }
 
   @override
-  void didUpdateWidget(FutureBuilder<T> oldWidget) {
+  void didUpdateWidget(FutureBuilder<T?> oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.future != widget.future) {
       if (_activeCallbackIdentity != null) {
         _unsubscribe();
-        _snapshot = _snapshot.inState(ConnectionState.none);
+        _snapshot = _snapshot!.inState(ConnectionState.none);
       }
       _subscribe();
     }
@@ -498,10 +497,10 @@ class _FutureBuilderState<T> extends State<FutureBuilder<T>> {
     if (widget.future != null) {
       final callbackIdentity = Object();
       _activeCallbackIdentity = callbackIdentity;
-      widget.future.then<void>((T data) {
+      widget.future!.then<void>((T? data) {
         if (_activeCallbackIdentity == callbackIdentity) {
           setState(() {
-            _snapshot = AsyncSnapshot<T>.withData(ConnectionState.done, data);
+            _snapshot = AsyncSnapshot<T?>.withData(ConnectionState.done, data);
           });
         }
       }, onError: (Object error, StackTrace stackTrace) {
@@ -512,7 +511,7 @@ class _FutureBuilderState<T> extends State<FutureBuilder<T>> {
           });
         }
       });
-      _snapshot = _snapshot.inState(ConnectionState.waiting);
+      _snapshot = _snapshot!.inState(ConnectionState.waiting);
     }
   }
 
@@ -522,7 +521,7 @@ class _FutureBuilderState<T> extends State<FutureBuilder<T>> {
 }
 
 typedef AsyncWidgetBuilder<T> = Widget Function(
-    BuildContext context, AsyncSnapshot<T> snapshot);
+    BuildContext context, AsyncSnapshot<T>? snapshot);
 
 @immutable
 class AsyncSnapshot<T> {
@@ -531,8 +530,7 @@ class AsyncSnapshot<T> {
   /// (but not both data and error).
   const AsyncSnapshot._(
       this.connectionState, this.data, this.error, this.stackTrace)
-      : assert(connectionState != null),
-        assert(!(data != null && error != null)),
+      : assert(!(data != null && error != null)),
         assert(stackTrace == null || error != null);
 
   /// Creates an [AsyncSnapshot] in [ConnectionState.none] with null data and error.
@@ -569,15 +567,15 @@ class AsyncSnapshot<T> {
   /// If the asynchronous computation has never returned a value, this may be
   /// set to an initial data value specified by the relevant widget. See
   /// [FutureBuilder.initialData] and [StreamBuilder.initialData].
-  final T data;
+  final T? data;
 
   /// Returns latest data received, failing if there is no data.
   ///
   /// Throws [error], if [hasError]. Throws [StateError], if neither [hasData]
   /// nor [hasError].
-  T get requireData {
+  T? get requireData {
     if (hasData) return data;
-    if (hasError) throw error;
+    if (hasError) throw error!;
     throw StateError('Snapshot has neither data nor error');
   }
 
@@ -586,7 +584,7 @@ class AsyncSnapshot<T> {
   /// If this is non-null, [hasError] will be true.
   ///
   /// If [data] is not null, this will be null.
-  final Object error;
+  final Object? error;
 
   /// The latest stack trace object received by the asynchronous computation.
   ///
@@ -595,7 +593,7 @@ class AsyncSnapshot<T> {
   ///
   /// However, even when not null, [stackTrace] might be empty. The stack trace
   /// is empty when there is an error but no stack trace has been provided.
-  final StackTrace stackTrace;
+  final StackTrace? stackTrace;
 
   /// Returns a snapshot like this one, but in the specified [state].
   ///

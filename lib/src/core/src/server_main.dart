@@ -62,23 +62,24 @@ class Public {
   });
 }
 
+// ignore: must_be_immutable
 class GetServer extends StatelessWidget with NodeMode {
-  HttpServer _server;
-  VirtualDirectory _virtualDirectory;
-  final List<GetPage> _getPages;
+  late HttpServer _server;
+  VirtualDirectory? _virtualDirectory;
+  final List<GetPage>? _getPages;
   final String host;
   final int port;
-  final String certificateChain;
+  final String? certificateChain;
   final bool shared;
-  final String privateKey;
-  final String password;
+  final String? privateKey;
+  final String? password;
   final bool cors;
   final String corsUrl;
-  final Widget onNotFound;
+  final Widget? onNotFound;
   final bool useLog;
-  final String jwtKey;
-  Public _public;
-  final Widget home;
+  final String? jwtKey;
+  Public? _public;
+  final Widget? home;
 
   GetServer({
     this.host = '0.0.0.0',
@@ -87,7 +88,7 @@ class GetServer extends StatelessWidget with NodeMode {
     this.privateKey,
     this.password,
     this.shared = true,
-    List<GetPage> getPages,
+    List<GetPage>? getPages,
     this.cors = false,
     this.corsUrl = '*',
     this.onNotFound,
@@ -100,7 +101,7 @@ class GetServer extends StatelessWidget with NodeMode {
     initialBinding?.dependencies();
   }
 
-  final Bindings initialBinding;
+  final Bindings? initialBinding;
 
   void stop() => _server.close();
 
@@ -110,7 +111,7 @@ class GetServer extends StatelessWidget with NodeMode {
         TokenUtil.saveJwtKey(jwtKey);
       }
 
-      RouteConfig.i.addRoutes(_getPages);
+      RouteConfig.i.addRoutes(_getPages!);
     }
 
     await startServer();
@@ -119,7 +120,7 @@ class GetServer extends StatelessWidget with NodeMode {
   }
 
   Future<void> startServer() async {
-    Get.log('Server started on ${host}:${port}');
+    Get.log('Server started on $host:$port');
 
     _server = await _getHttpServer();
 
@@ -142,12 +143,12 @@ class GetServer extends StatelessWidget with NodeMode {
         } else {
           if (_public != null) {
             _virtualDirectory ??= VirtualDirectory(
-              _public.folder,
+              _public!.folder,
               // pathPrefix: public.path,
             )
-              ..allowDirectoryListing = _public.allowDirectoryListing
-              ..jailRoot = _public.jailRoot
-              ..followLinks = _public.followLinks
+              ..allowDirectoryListing = _public!.allowDirectoryListing
+              ..jailRoot = _public!.jailRoot
+              ..followLinks = _public!.followLinks
               ..errorPageHandler = (callback) {
                 _onNotFound(
                   callback,
@@ -156,10 +157,10 @@ class GetServer extends StatelessWidget with NodeMode {
               }
               ..directoryHandler = (dir, req) {
                 var indexUri = Uri.file(dir.path).resolve('index.html');
-                _virtualDirectory.serveFile(File(indexUri.toFilePath()), req);
+                _virtualDirectory!.serveFile(File(indexUri.toFilePath()), req);
               };
 
-            _virtualDirectory.serveRequest(req);
+            _virtualDirectory!.serveRequest(req);
           } else {
             _onNotFound(
               req,
@@ -182,7 +183,7 @@ class GetServer extends StatelessWidget with NodeMode {
         jailRoot: _home.jailRoot,
       );
     } else {
-      _getPages.add(GetPage(name: '/', page: () => home));
+      _getPages?.add(GetPage(name: '/', page: () => home));
     }
   }
 
@@ -190,9 +191,9 @@ class GetServer extends StatelessWidget with NodeMode {
     if (privateKey != null) {
       var context = SecurityContext();
       if (certificateChain != null) {
-        context.useCertificateChain(File(certificateChain).path);
+        context.useCertificateChain(File(certificateChain!).path);
       }
-      context.usePrivateKey(File(privateKey).path, password: password);
+      context.usePrivateKey(File(privateKey!).path, password: password);
       return HttpServer.bindSecure(host, port, context, shared: shared);
     } else {
       return HttpServer.bind(host, port, shared: shared);
@@ -207,7 +208,7 @@ class GetServer extends StatelessWidget with NodeMode {
         'access-control-allow-origin,content-type,x-access-token');
   }
 
-  void _onNotFound(HttpRequest req, Widget onNotFound) {
+  void _onNotFound(HttpRequest req, Widget? onNotFound) {
     if (onNotFound != null) {
       Route(
         Method.get,
@@ -226,7 +227,7 @@ class GetServer extends StatelessWidget with NodeMode {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext? context) {
     start();
     return WidgetEmpty();
   }

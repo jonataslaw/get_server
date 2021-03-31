@@ -8,8 +8,8 @@ import 'context_response.dart';
 import 'dart:convert' show utf8;
 
 class MultipartUpload {
-  final String name;
-  final String mimeType;
+  final String? name;
+  final String? mimeType;
   final dynamic contentTransferEncoding;
   final dynamic data;
   const MultipartUpload(
@@ -33,18 +33,18 @@ class MultipartUpload {
 class ContextRequest {
   final HttpRequest _request;
   final Method requestMethod;
-  ContextResponse response;
+  ContextResponse? response;
 
   ContextRequest(this._request, this.requestMethod);
 
-  List header(String name) => _request.headers[name.toLowerCase()];
+  List? header(String name) => _request.headers[name.toLowerCase()];
 
-  bool accepts(String type) => _request.headers[HttpHeaders.acceptHeader]
+  bool accepts(String type) => _request.headers[HttpHeaders.acceptHeader]!
       .where((name) => name.split(',').indexOf(type) > 0)
       .isNotEmpty;
 
   bool isMime(String type, {bool loose = true}) =>
-      _request.headers[HttpHeaders.contentTypeHeader]
+      _request.headers[HttpHeaders.contentTypeHeader]!
           .where((value) => loose ? value.contains(type) : value == type)
           .isNotEmpty;
 
@@ -56,7 +56,7 @@ class ContextRequest {
   HttpRequest get input => _request;
 
   Map<String, String> get query => _request.uri.queryParameters;
-  Map<String, String> params;
+  Map<String?, String?>? params;
 
   List<Cookie> get cookies => _request.cookies.map((cookie) {
         cookie.name = Uri.decodeQueryComponent(cookie.name);
@@ -72,11 +72,11 @@ class ContextRequest {
 
   String get method => _request.method;
 
-  X509Certificate get certificate => _request.certificate;
+  X509Certificate? get certificate => _request.certificate;
 
-  String param(String name) {
-    if (params.containsKey(name) && params[name] != null) {
-      return params[name];
+  String? param(String name) {
+    if (params!.containsKey(name) && params![name] != null) {
+      return params![name];
     } else if (query[name] != null) {
       return query[name];
     }
@@ -86,7 +86,7 @@ class ContextRequest {
   /// Get the payload (body)
   ///
   /// If don't have the contentType of payload will return null
-  Future<Map> payload({Encoding encoder = utf8}) async {
+  Future<Map?> payload({Encoding encoder = utf8}) async {
     var completer = Completer<Map>();
 
     if (!hasContentType) return null;
@@ -101,7 +101,7 @@ class ContextRequest {
         completer.complete(payload);
       });
     } else if (isMime('multipart/form-data', loose: true)) {
-      var boundary = _request.headers.contentType.parameters['boundary'];
+      var boundary = _request.headers.contentType!.parameters['boundary']!;
       final payload = {};
       MimeMultipartTransformer(boundary)
           .bind(_request)
@@ -112,7 +112,7 @@ class ContextRequest {
           if (formData.contentType != null) {
             data = MultipartUpload(
                 parameters['filename'],
-                formData.contentType.mimeType,
+                formData.contentType!.mimeType,
                 formData.contentTransferEncoding,
                 data);
           }

@@ -8,15 +8,15 @@ abstract class GetSocket {
   ) {
     return _GetSocketImpl(ws, rooms, sockets);
   }
-  Map<String, HashSet<GetSocket>> get rooms;
+  Map<String?, HashSet<GetSocket>> get rooms;
   HashSet<GetSocket> get sockets;
   void send(dynamic message);
 
   void emit(String event, Object data);
 
-  void close([int status, String reason]);
+  void close([int? status, String? reason]);
 
-  bool join(String room);
+  bool join(String? room);
 
   bool leave(String room);
 
@@ -30,7 +30,7 @@ abstract class GetSocket {
 
   int get length;
 
-  GetSocket getSocketById(int id);
+  GetSocket? getSocketById(int id);
 
   void broadcast(Object message);
 
@@ -40,7 +40,7 @@ abstract class GetSocket {
 
   void emitToAll(String event, Object data);
 
-  void sendToRoom(String room, Object message);
+  void sendToRoom(String? room, Object message);
 
   void broadcastToRoom(String room, Object message);
 

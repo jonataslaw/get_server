@@ -1,4 +1,4 @@
-export 'package:get_core/get_core.dart';
+export 'src/framework/get_core/get_core.dart';
 export 'src/context/context_request.dart';
 export 'src/core/server.dart';
 export 'src/infrastructure/getx_controller.dart';
