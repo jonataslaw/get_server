@@ -207,7 +207,8 @@ class RouteParser {
 
   static bool match(String uriPath, String method, Method _method, Map path) {
     return ((enumValueToString(_method) == method.toLowerCase() ||
-            _method == Method.dynamic) &&
+            _method == Method.dynamic ||
+            _method == Method.ws) &&
         path['regexp'].hasMatch(uriPath));
   }
 }

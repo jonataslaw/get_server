@@ -56,7 +56,7 @@ class Pageable extends GetWidget {
     final result = list.sublist(
         fistElement, lastElement > list.length ? list.length : lastElement);
 
-    final pageable = _Pageable(
+    dynamic pageable = _Pageable(
         content: result,
         currentPage: page,
         size: size,
@@ -90,7 +90,7 @@ class _Pageable {
           content is List<DateTime>) {
         data['content'] = content;
       } else {
-        data['content'] = content!.map((v) => v.toJson()).toList();
+        data['content'] = content!.map((v) => v).toList();
       }
     }
     data['size'] = size;

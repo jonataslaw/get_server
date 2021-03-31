@@ -166,7 +166,7 @@ class Json extends SenderWidget {
   Json(this.content);
   @override
   Widget build(BuildContext context) {
-    context.response!.sendJson(content);
+    context.response!.sendJson(content.toJson());
     return WidgetEmpty();
   }
 }
@@ -180,8 +180,8 @@ class Socket extends SenderWidget {
   final SocketBuilder builder;
   @override
   Widget build(BuildContext context) {
-    GetSocket? event = context.getSocket!;
-    event.rawSocket.done.then((value) {
+    var event = context.getSocket;
+    event!.rawSocket.done.then((value) {
       event = null;
     });
     builder(event!);

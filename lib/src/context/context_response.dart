@@ -102,7 +102,7 @@ class ContextResponse {
     return close();
   }
 
-  Future sendJson(Object data) {
+  Future sendJson(Object? data) {
     // if (data is Map || data is List) {
     //   data = jsonEncode(data);
     // }
