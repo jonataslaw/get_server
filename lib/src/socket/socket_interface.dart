@@ -42,6 +42,8 @@ abstract class GetSocket {
 
   void sendToRoom(String? room, Object message);
 
+  void emitToRoom(String event, String? room, Object message);
+
   void broadcastToRoom(String room, Object message);
 
   void onOpen(OpenSocket fn);
