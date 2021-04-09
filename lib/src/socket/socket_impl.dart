@@ -115,6 +115,16 @@ class _GetSocketImpl implements GetSocket {
     }
   }
 
+  @override
+  void emitToRoom(String event, String? room, Object message) {
+    _checkAvailable();
+    if (rooms.containsKey(room) && rooms[room]!.contains(_ws)) {
+      for (var element in rooms[room]!) {
+        element.emit(event, message);
+      }
+    }
+  }
+
   void _checkAvailable() {
     if (isDisposed) throw 'Cannot add events to closed Socket';
   }
