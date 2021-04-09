@@ -13,7 +13,7 @@ dependencies:
   get_core: ">=3.10.2 <4.0.0"
  # get_instance: ">=3.10.2 <4.0.0"
   get_rx: ">=3.10.2 <4.0.0"
-  jaguar_jwt: ^2.1.6
+  jaguar_jwt: ^3.0.0
   getstream: ^1.2.1
 
 dev_dependencies:
