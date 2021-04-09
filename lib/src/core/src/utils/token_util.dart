@@ -21,7 +21,7 @@ abstract class TokenUtil {
   }
 
   static String? getJwtKey() {
-    var key = Get.find<String>(tag: 'jwtKey');
+    var key = Get.find<String?>(tag: 'jwtKey');
     return key;
   }
 
