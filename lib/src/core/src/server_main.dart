@@ -1,6 +1,6 @@
 part of server;
 
-void runIsolate(void Function(dynamic) isol) {
+void runIsolate(void Function(dynamic _) isol) {
   isol(null);
   final list = List.generate(Platform.numberOfProcessors - 1, (index) => null);
   for (var item in list) {
@@ -62,10 +62,9 @@ class Public {
   });
 }
 
-// ignore: must_be_immutable
 class GetServer extends StatelessWidget with NodeMode {
-  late HttpServer _server;
-  VirtualDirectory? _virtualDirectory;
+  late final HttpServer _server;
+  late final VirtualDirectory? _virtualDirectory;
   final List<GetPage>? _getPages;
   final String host;
   final int port;
@@ -78,7 +77,7 @@ class GetServer extends StatelessWidget with NodeMode {
   final Widget? onNotFound;
   final bool useLog;
   final String? jwtKey;
-  Public? _public;
+  late final Public? _public;
   final Widget? home;
 
   GetServer({
