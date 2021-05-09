@@ -38,7 +38,7 @@ To create a server, and send a plain text:
 ```dart
 void main() {
   runApp(
-    GetServer(
+    GetServerApp(
       home: Home(),
     ),
   );
@@ -55,7 +55,7 @@ However, if you don't need to have a single page, you will need named routes to 
 
 ```dart
 void main() {
-  runApp(GetServer(
+  runApp(GetServerApp(
     getPages: [
       GetPage(name: '/', page:()=> Home()),
     ],
@@ -92,7 +92,7 @@ Flutter web generates an html file that calls a js file, which in turn requests 
 ```dart
 void main() {
   runApp(
-    GetServer(
+    GetServerApp(
       home: FolderWidget('web'),
       getPages: [
         GetPage(name: '/api', page: () => ApiPage()),
@@ -142,7 +142,7 @@ First define a secret for your JWT:
 ```dart
 void main() {
   runApp(
-   GetServer(
+   GetServerApp(
     jwtKey: 'your key here',
    ),
   );
@@ -226,7 +226,6 @@ void main() {
       });
     });
   });
-  app.start();
 }
 ```
 
@@ -242,7 +241,7 @@ void main() {
 
 void init(_) {
   runApp(
-    GetServer(
+    GetServerApp(
       home: Home(),
     ),
   );

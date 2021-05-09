@@ -203,6 +203,8 @@ class WidgetBuilder extends StatelessWidget {
 
 typedef WidgetCallback = Widget Function();
 
+typedef NodeWidgetCallback = Widget Function(BuildContext ctx);
+
 abstract class ObxWidget extends StatefulWidget {
   const ObxWidget({Key? key}) : super(key: key);
 

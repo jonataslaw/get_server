@@ -1,5 +1,5 @@
 name: get_server
-version: 1.0.0
+version: 1.1.0
 homepage: https://github.com/jonataslaw/get_server
 description: A backend server (http and websocket) that makes it possible to program with Flutter syntax and reuse existing code
 environment: 

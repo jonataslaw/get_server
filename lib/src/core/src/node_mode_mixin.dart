@@ -1,28 +1,68 @@
 part of server;
 
+class NodeWidgetWrapper extends StatelessWidget {
+  const NodeWidgetWrapper({Key? key, required this.builder}) : super(key: key);
+  final Widget Function(BuildContext context) builder;
+
+  @override
+  Widget build(BuildContext context) {
+    return builder(context);
+  }
+}
+
 mixin NodeMode {
-  void get(String name, WidgetCallback build, {List<String?>? keys}) {
+  void get(String name, NodeWidgetCallback build, {List<String?>? keys}) {
     final path = RouteParser.normalize(name, keys: keys);
-    RouteConfig.i.addRoute(Route(Method.get, path, build()));
+    RouteConfig.i.addRoute(Route(
+      Method.get,
+      path,
+      NodeWidgetWrapper(
+        builder: (context) => build(context),
+      ),
+    ));
   }
 
-  void post(String name, WidgetCallback build, {List<String?>? keys}) {
+  void post(String name, NodeWidgetCallback build, {List<String?>? keys}) {
     final path = RouteParser.normalize(name, keys: keys);
-    RouteConfig.i.addRoute(Route(Method.post, path, build()));
+    RouteConfig.i.addRoute(Route(
+      Method.post,
+      path,
+      NodeWidgetWrapper(
+        builder: (context) => build(context),
+      ),
+    ));
   }
 
-  void delete(String name, WidgetCallback build, {List<String?>? keys}) {
+  void delete(String name, NodeWidgetCallback build, {List<String?>? keys}) {
     final path = RouteParser.normalize(name, keys: keys);
-    RouteConfig.i.addRoute(Route(Method.delete, path, build()));
+    RouteConfig.i.addRoute(Route(
+      Method.delete,
+      path,
+      NodeWidgetWrapper(
+        builder: (context) => build(context),
+      ),
+    ));
   }
 
-  void put(String name, WidgetCallback build, {List<String?>? keys}) {
+  void put(String name, NodeWidgetCallback build, {List<String?>? keys}) {
     final path = RouteParser.normalize(name, keys: keys);
-    RouteConfig.i.addRoute(Route(Method.put, path, build()));
+    RouteConfig.i.addRoute(Route(
+      Method.put,
+      path,
+      NodeWidgetWrapper(
+        builder: (context) => build(context),
+      ),
+    ));
   }
 
-  void ws(String name, WidgetCallback build, {List<String?>? keys}) {
+  void ws(String name, NodeWidgetCallback build, {List<String?>? keys}) {
     final path = RouteParser.normalize(name, keys: keys);
-    RouteConfig.i.addRoute(Route(Method.ws, path, build()));
+    RouteConfig.i.addRoute(Route(
+      Method.ws,
+      path,
+      NodeWidgetWrapper(
+        builder: (context) => build(context),
+      ),
+    ));
   }
 }
