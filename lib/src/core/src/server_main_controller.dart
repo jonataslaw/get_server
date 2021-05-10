@@ -61,7 +61,7 @@ class GetServerController extends GetxController {
 
     if (_getPages != null) {
       if (jwtKey != null) {
-        TokenUtil.saveJwtKey(jwtKey);
+        TokenUtil.saveJwtKey(jwtKey!);
       }
 
       RouteConfig.i.addRoutes(_getPages!);

@@ -390,13 +390,7 @@ class Error extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Json(
-      ResponseBaseModel(
-        error: error,
-        success: false,
-        data: null,
-      ),
-    );
+    return Json(ResponseBaseModel(error: error, success: false, data: null));
   }
 }
 

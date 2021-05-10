@@ -137,14 +137,7 @@ class Route {
         successCallback();
       } else {
         req.response?.status(401);
-        _sendResponse(
-          req,
-          failure: Json({
-            'success': false,
-            'data': null,
-            'error': message,
-          }),
-        );
+        _sendResponse(req, failure: Error(error: message));
       }
     } else {
       successCallback();
