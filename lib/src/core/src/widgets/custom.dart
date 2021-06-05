@@ -166,7 +166,8 @@ class Json extends SenderWidget {
   Json(this.content);
   @override
   Widget build(BuildContext context) {
-    context.response!.sendJson(content.toJson());
+    final data = content is Map ? content : content.toJson();
+    context.response!.sendJson(data);
     return WidgetEmpty();
   }
 }
