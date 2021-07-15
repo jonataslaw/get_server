@@ -103,17 +103,13 @@ class ContextResponse {
   }
 
   Future sendJson(Object? data) {
-    // if (data is Map || data is List) {
-    //   data = jsonEncode(data);
-    // }
-
-    // if (get('Content-Type') == null) {
-    //   type('application/json');
-    // }
-
-    // create a temporary solution
     _response.headers.set('Content-Type', 'application/json; charset=UTF-8');
-    _response.write(jsonEncode(data));
+    try {
+      var jsonResponse = jsonEncode(data);
+      _response.write(jsonResponse);
+    } catch (e) {
+      _response.write(jsonEncode({'error': e.toString()}));
+    }
     return close();
   }
 
