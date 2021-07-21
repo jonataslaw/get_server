@@ -21,11 +21,11 @@ abstract class TokenUtil {
   }
 
   static String? getJwtKey() {
-    var key = Get.find<String>(tag: 'jwtKey');
+    var key = Get.find<String?>(tag: 'jwtKey');
     return key;
   }
 
-  static void saveJwtKey(String jwtKey) {
+  static void saveJwtKey(String? jwtKey) {
     Get.put(jwtKey, tag: 'jwtKey');
   }
 
