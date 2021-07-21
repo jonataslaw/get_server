@@ -63,7 +63,11 @@ packages:
       name: pedantic
       url: "https://pub.dartlang.org"
     source: hosted
+<<<<<<< HEAD
+    version: "1.10.0"
+=======
     version: "1.11.0"
+>>>>>>> fe90ecfcffc068bc2e58e0fbb72711a854295244
   typed_data:
     dependency: transitive
     description:

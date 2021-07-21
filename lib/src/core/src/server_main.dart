@@ -205,7 +205,7 @@ class GetServer extends StatelessWidget with NodeMode {
     response.headers
         .add('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE');
     response.headers.add('Access-Control-Allow-Headers',
-        'access-control-allow-origin,content-type,x-access-token');
+        'access-control-allow-origin, content-type, x-access-token, authorization, user-agent');
   }
 
   void _onNotFound(HttpRequest req, Widget? onNotFound) {

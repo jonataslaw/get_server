@@ -122,9 +122,13 @@ class ContextRequest {
         completer.complete(payload);
       });
     } else if (isMime('application/json')) {
-      final content = await utf8.decodeStream(_request);
-      final payload = jsonDecode(content);
-      completer.complete(payload);
+      try {
+        final content = await utf8.decodeStream(_request);
+        final payload = jsonDecode(content);
+        completer.complete(payload);
+      } catch (e) {
+        rethrow;
+      }
     }
 
     return completer.future;
