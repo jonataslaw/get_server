@@ -60,17 +60,8 @@ mixin GetLifeCycleBase {
   /// Checks whether the controller has already been initialized.
   bool get initialized => _initialized;
 
-<<<<<<< HEAD:lib/src/infrastructure/get_instance/lifecycle.dart
-  /// Called at the exact moment the widget is allocated in memory.
-  /// It uses an internal "callable" type, to avoid any @overrides in subclases.
-  /// This method should be internal and is required to define the
-  /// lifetime cycle of the subclass.
-  // @internal
-  void onStart() {
-=======
   // Internal callback that starts the cycle of this controller.
   void _onStart() {
->>>>>>> fe90ecfcffc068bc2e58e0fbb72711a854295244:lib/src/framework/get_instance/src/lifecycle.dart
     if (_initialized) return;
     onInit();
     _initialized = true;
@@ -82,12 +73,7 @@ mixin GetLifeCycleBase {
   bool get isClosed => _isClosed;
 
   // Internal callback that starts the cycle of this controller.
-<<<<<<< HEAD:lib/src/infrastructure/get_instance/lifecycle.dart
-  // @internal
-  void onDelete() {
-=======
   void _onDelete() {
->>>>>>> fe90ecfcffc068bc2e58e0fbb72711a854295244:lib/src/framework/get_instance/src/lifecycle.dart
     if (_isClosed) return;
     _isClosed = true;
     onClose();
