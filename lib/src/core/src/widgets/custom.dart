@@ -166,7 +166,8 @@ class Json extends SenderWidget {
   Json(this.content);
   @override
   Widget build(BuildContext context) {
-    context.response!.sendJson(content.toJson());
+    final data = content is Map ? content : content.toJson();
+    context.response!.sendJson(data);
     return WidgetEmpty();
   }
 }
@@ -202,6 +203,8 @@ class WidgetBuilder extends StatelessWidget {
 }
 
 typedef WidgetCallback = Widget Function();
+
+typedef NodeWidgetCallback = Widget Function(BuildContext ctx);
 
 abstract class ObxWidget extends StatefulWidget {
   const ObxWidget({Key? key}) : super(key: key);
@@ -388,13 +391,7 @@ class Error extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Json(
-      ResponseBaseModel(
-        error: error,
-        success: false,
-        data: null,
-      ),
-    );
+    return Json(ResponseBaseModel(error: error, success: false, data: null));
   }
 }
 

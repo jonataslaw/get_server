@@ -1,3 +1,6 @@
+# [1.1.0]
+- Add emitToRoom, improve structure, fix errors on Nodejs mode, and remove deprecated packages
+
 # [1.0.0]
 - Added Get_Utils, Internationalization, GetConnect client, Rx methods.
 - migrate to null-safety

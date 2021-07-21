@@ -1,6 +1,6 @@
 part of server;
 
-void runIsolate(void Function(dynamic) isol) {
+void runIsolate(void Function(dynamic _) isol) {
   isol(null);
   final list = List.generate(Platform.numberOfProcessors - 1, (index) => null);
   for (var item in list) {
@@ -8,16 +8,57 @@ void runIsolate(void Function(dynamic) isol) {
   }
 }
 
+class Foo extends ContextRequest {
+  Foo(HttpRequest request, Method requestMethod)
+      : super(request, requestMethod);
+}
+
 void runApp(Widget widget) {
-  if (widget is GetServer) {
-    widget.build(null);
+  if (widget is GetServerApp) {
+    widget._createServer();
   } else {
-    GetServer(
+    GetServerApp(
       port: 8080,
       cors: true,
       home: widget,
-    ).build(null);
+    )._createServer();
   }
+}
+
+class GetServer extends GetServerApp {
+  GetServer({
+    Key? key,
+    String host = '0.0.0.0',
+    int port = 8080,
+    String? certificateChain,
+    bool shared = true,
+    String? privateKey,
+    String? password,
+    bool cors = false,
+    String corsUrl = '*',
+    Widget? onNotFound,
+    bool useLog = true,
+    String? jwtKey,
+    Widget? home,
+    Bindings? initialBinding,
+    List<GetPage>? getPages,
+  }) : super(
+          key: key,
+          host: host,
+          port: port,
+          certificateChain: certificateChain,
+          shared: shared,
+          privateKey: privateKey,
+          password: password,
+          cors: cors,
+          corsUrl: corsUrl,
+          onNotFound: onNotFound,
+          useLog: useLog,
+          jwtKey: jwtKey,
+          home: home,
+          initialBinding: initialBinding,
+          getPages: getPages,
+        );
 }
 
 class FolderWidget extends StatelessWidget {
@@ -62,11 +103,41 @@ class Public {
   });
 }
 
-// ignore: must_be_immutable
-class GetServer extends StatelessWidget with NodeMode {
-  late HttpServer _server;
-  VirtualDirectory? _virtualDirectory;
-  final List<GetPage>? _getPages;
+class GetServerApp extends StatelessWidget with NodeMode {
+  GetServerApp({
+    Key? key,
+    this.host = '0.0.0.0',
+    this.port = 8080,
+    this.certificateChain,
+    this.privateKey,
+    this.password,
+    this.shared = true,
+    this.getPages,
+    this.cors = false,
+    this.corsUrl = '*',
+    this.onNotFound,
+    this.initialBinding,
+    this.useLog = true,
+    this.jwtKey,
+    this.home,
+  })  : controller = Get.put(GetServerController(
+          host: host,
+          port: port,
+          certificateChain: certificateChain,
+          shared: shared,
+          privateKey: privateKey,
+          password: password,
+          cors: cors,
+          corsUrl: corsUrl,
+          onNotFound: onNotFound,
+          useLog: useLog,
+          jwtKey: jwtKey,
+          home: home,
+          initialBinding: initialBinding,
+          getPages: getPages,
+        )),
+        super(key: key);
+
   final String host;
   final int port;
   final String? certificateChain;
@@ -78,157 +149,16 @@ class GetServer extends StatelessWidget with NodeMode {
   final Widget? onNotFound;
   final bool useLog;
   final String? jwtKey;
-  Public? _public;
   final Widget? home;
-
-  GetServer({
-    this.host = '0.0.0.0',
-    this.port = 8080,
-    this.certificateChain,
-    this.privateKey,
-    this.password,
-    this.shared = true,
-    List<GetPage>? getPages,
-    this.cors = false,
-    this.corsUrl = '*',
-    this.onNotFound,
-    this.initialBinding,
-    this.useLog = true,
-    this.jwtKey,
-    this.home,
-  }) : _getPages = getPages ?? List.from([]) {
-    _homeParser();
-    initialBinding?.dependencies();
-  }
-
   final Bindings? initialBinding;
+  final List<GetPage>? getPages;
 
-  void stop() => _server.close();
+  final GetServerController controller;
 
-  Future<GetServer> start() async {
-    if (_getPages != null) {
-      if (jwtKey != null) {
-        TokenUtil.saveJwtKey(jwtKey);
-      }
-
-      RouteConfig.i.addRoutes(_getPages!);
-    }
-
-    await startServer();
-
-    return Future.value(this);
-  }
-
-  Future<void> startServer() async {
-    Get.log('Server started on $host:$port');
-
-    _server = await _getHttpServer();
-
-    _server.listen(
-      (req) {
-        if (useLog) Get.log('Method ${req.method} on ${req.uri}');
-        final route = RouteConfig.i.findRoute(req);
-
-        route?.binding?.dependencies();
-        if (cors) {
-          addCorsHeaders(req.response, corsUrl);
-          if (req.method.toLowerCase() == 'options') {
-            req.response.statusCode = 204;
-            req.response.close();
-            return;
-          }
-        }
-        if (route != null) {
-          route.handle(req);
-        } else {
-          if (_public != null) {
-            _virtualDirectory ??= VirtualDirectory(
-              _public!.folder,
-              // pathPrefix: public.path,
-            )
-              ..allowDirectoryListing = _public!.allowDirectoryListing
-              ..jailRoot = _public!.jailRoot
-              ..followLinks = _public!.followLinks
-              ..errorPageHandler = (callback) {
-                _onNotFound(
-                  callback,
-                  onNotFound,
-                );
-              }
-              ..directoryHandler = (dir, req) {
-                var indexUri = Uri.file(dir.path).resolve('index.html');
-                _virtualDirectory!.serveFile(File(indexUri.toFilePath()), req);
-              };
-
-            _virtualDirectory!.serveRequest(req);
-          } else {
-            _onNotFound(
-              req,
-              onNotFound,
-            );
-          }
-        }
-      },
-    );
-  }
-
-  void _homeParser() {
-    if (home == null) return;
-    if (home is FolderWidget) {
-      var _home = home as FolderWidget;
-      _public = Public(
-        _home.folder,
-        allowDirectoryListing: _home.allowDirectoryListing,
-        followLinks: _home.followLinks,
-        jailRoot: _home.jailRoot,
-      );
-    } else {
-      _getPages?.add(GetPage(name: '/', page: () => home));
-    }
-  }
-
-  Future<HttpServer> _getHttpServer() {
-    if (privateKey != null) {
-      var context = SecurityContext();
-      if (certificateChain != null) {
-        context.useCertificateChain(File(certificateChain!).path);
-      }
-      context.usePrivateKey(File(privateKey!).path, password: password);
-      return HttpServer.bindSecure(host, port, context, shared: shared);
-    } else {
-      return HttpServer.bind(host, port, shared: shared);
-    }
-  }
-
-  void addCorsHeaders(HttpResponse response, String corsUrl) {
-    response.headers.add('Access-Control-Allow-Origin', corsUrl);
-    response.headers
-        .add('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE');
-    response.headers.add('Access-Control-Allow-Headers',
-        'access-control-allow-origin, content-type, x-access-token, authorization, user-agent');
-  }
-
-  void _onNotFound(HttpRequest req, Widget? onNotFound) {
-    if (onNotFound != null) {
-      Route(
-        Method.get,
-        RouteParser.normalize(req.uri.toString()),
-        onNotFound,
-      ).handle(req, status: HttpStatus.notFound);
-    } else {
-      pageNotFound(req);
-    }
-  }
-
-  void pageNotFound(HttpRequest req) {
-    req.response
-      ..statusCode = HttpStatus.notFound
-      ..close();
-  }
+  void _createServer() => build(null);
 
   @override
   Widget build(BuildContext? context) {
-    start();
     return WidgetEmpty();
   }
 }
