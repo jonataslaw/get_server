@@ -25,7 +25,7 @@ abstract class TokenUtil {
     return key;
   }
 
-  static void saveJwtKey(String jwtKey) {
+  static void saveJwtKey(String? jwtKey) {
     Get.put(jwtKey, tag: 'jwtKey');
   }
 
