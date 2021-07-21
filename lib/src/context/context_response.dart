@@ -9,7 +9,7 @@ class ContextResponse {
 
   ContextResponse(this._response);
 
-  dynamic header(String name, [Object value]) {
+  dynamic header(String name, [Object? value]) {
     if (value == null) {
       return _response.headers[name];
     }
@@ -17,19 +17,19 @@ class ContextResponse {
     return this;
   }
 
-  DisposeCallback _dispose;
+  DisposeCallback? _dispose;
 
   void addDisposeCallback(DisposeCallback disposer) {
     _dispose = disposer;
   }
 
-  ContextResponse get(String name) => header(name);
+  ContextResponse? get(String name) => header(name);
 
-  ContextResponse set(String name, String value) => header(name, value);
+  ContextResponse? set(String name, String value) => header(name, value);
 
-  ContextResponse type(String contentType) => set('Content-Type', contentType);
+  ContextResponse? type(String contentType) => set('Content-Type', contentType);
 
-  ContextResponse cache(String cacheType, [Map<String, String> options]) {
+  ContextResponse? cache(String cacheType, [Map<String, String>? options]) {
     options ??= {};
     final value = StringBuffer(cacheType);
     options.forEach((key, val) {
@@ -85,14 +85,11 @@ class ContextResponse {
     return this;
   }
 
-  ContextResponse attachment(String filename) {
-    if (filename != null) {
-      return set('Content-Disposition', 'attachment; filename="$filename"');
-    }
-    return this;
+  ContextResponse? attachment(String filename) {
+    return set('Content-Disposition', 'attachment; filename="$filename"');
   }
 
-  ContextResponse mime(String path) {
+  ContextResponse? mime(String path) {
     var mimeType = lookupMimeType(path);
     if (mimeType != null) {
       return type(mimeType);
@@ -105,7 +102,7 @@ class ContextResponse {
     return close();
   }
 
-  Future sendJson(Object data) {
+  Future sendJson(Object? data) {
     // if (data is Map || data is List) {
     //   data = jsonEncode(data);
     // }

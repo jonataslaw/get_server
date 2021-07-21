@@ -24,6 +24,7 @@ mixin AppPages {
       name: Routes.USER,
       page: () => UserPage(),
       binding: UserBinding(),
+      // method: Method.get,
     ),
     GetPage(
       name: Routes.LANDING,

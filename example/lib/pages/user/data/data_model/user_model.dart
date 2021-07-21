@@ -12,10 +12,10 @@ class User {
     this.error,
   });
 
-  String name;
-  String age;
-  String country;
-  String error;
+  String? name;
+  String? age;
+  String? country;
+  String? error;
 
   factory User.fromRawJson(String str) => User.fromJson(json.decode(str));
 

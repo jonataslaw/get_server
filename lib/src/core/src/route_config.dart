@@ -10,7 +10,7 @@ class RouteConfig {
         Route(
           route.method,
           route.path,
-          route.page(),
+          route.page!(),
           binding: route.binding,
           needAuth: route.needAuth,
         ),
@@ -22,15 +22,14 @@ class RouteConfig {
     _pages.add(route);
   }
 
-  Route findRoute(HttpRequest req) {
-    final route = _pages.firstWhere(
+  Route? findRoute(HttpRequest req) {
+    final route = _pages.firstWhereOrNull(
       (route) => RouteParser.match(
         req.uri.path,
         req.method,
         route.method,
         route.path,
       ),
-      orElse: () => null,
     );
 
     return route;

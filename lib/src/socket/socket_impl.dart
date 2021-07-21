@@ -3,14 +3,14 @@ part of socket;
 class _GetSocketImpl implements GetSocket {
   final WebSocket _ws;
 
-  StreamSubscription _subs;
+  late StreamSubscription _subs;
 
-  SocketNotifier socketNotifier = SocketNotifier();
+  SocketNotifier? socketNotifier = SocketNotifier();
 
   bool isDisposed = false;
 
   @override
-  final Map<String, HashSet<GetSocket>> rooms;
+  final Map<String?, HashSet<GetSocket>> rooms;
 
   @override
   final HashSet<GetSocket> sockets;
@@ -19,15 +19,15 @@ class _GetSocketImpl implements GetSocket {
     // _ws.done.then((value) => null);
     sockets.add(this);
     _subs = _ws.listen((data) {
-      socketNotifier.notifyData(data);
+      socketNotifier!.notifyData(data);
     }, onError: (err) {
-      socketNotifier.notifyError(Close(this, err.toString(), 0));
+      socketNotifier!.notifyError(Close(this, err.toString(), 0));
       close();
     }, onDone: () {
       sockets.remove(this);
       rooms.removeWhere((key, value) => value.contains(this));
-      socketNotifier.notifyClose(Close(this, 'Connection closed', 1), this);
-      socketNotifier.dispose();
+      socketNotifier!.notifyClose(Close(this, 'Connection closed', 1), this);
+      socketNotifier!.dispose();
       socketNotifier = null;
       isDisposed = true;
     });
@@ -61,9 +61,8 @@ class _GetSocketImpl implements GetSocket {
   int get length => sockets.length;
 
   @override
-  GetSocket getSocketById(int id) {
-    return sockets.firstWhere((element) => element.id == id,
-        orElse: () => null);
+  GetSocket? getSocketById(int id) {
+    return sockets.firstWhereOrNull((element) => element.id == id);
   }
 
   @override
@@ -107,10 +106,10 @@ class _GetSocketImpl implements GetSocket {
   }
 
   @override
-  void sendToRoom(String room, Object message) {
+  void sendToRoom(String? room, Object message) {
     _checkAvailable();
-    if (rooms.containsKey(room) && rooms[room].contains(_ws)) {
-      for (var element in rooms[room]) {
+    if (rooms.containsKey(room) && rooms[room]!.contains(_ws)) {
+      for (var element in rooms[room]!) {
         element.send(message);
       }
     }
@@ -124,8 +123,8 @@ class _GetSocketImpl implements GetSocket {
   void broadcastToRoom(String room, Object message) {
     _checkAvailable();
 
-    if (rooms.containsKey(room) && rooms[room].contains(this)) {
-      for (var element in rooms[room]) {
+    if (rooms.containsKey(room) && rooms[room]!.contains(this)) {
+      for (var element in rooms[room]!) {
         if (element != this) {
           element.send(message);
         }
@@ -139,14 +138,14 @@ class _GetSocketImpl implements GetSocket {
   }
 
   @override
-  bool join(String room) {
+  bool join(String? room) {
     _checkAvailable();
     if (rooms.containsKey(room)) {
-      return rooms[room].add(this);
+      return rooms[room]!.add(this);
     } else {
       Get.log("Room [$room] don't exists, creating it");
       rooms[room] = HashSet();
-      return rooms[room].add(this);
+      return rooms[room]!.add(this);
     }
   }
 
@@ -154,7 +153,7 @@ class _GetSocketImpl implements GetSocket {
   bool leave(String room) {
     _checkAvailable();
     if (rooms.containsKey(room)) {
-      return rooms[room].remove(this);
+      return rooms[room]!.remove(this);
     } else {
       Get.log("Room $room don't exists");
       return false;
@@ -168,26 +167,26 @@ class _GetSocketImpl implements GetSocket {
 
   @override
   void onClose(CloseSocket fn) {
-    socketNotifier.addCloses(fn);
+    socketNotifier!.addCloses(fn);
   }
 
   @override
   void onError(CloseSocket fn) {
-    socketNotifier.addErrors(fn);
+    socketNotifier!.addErrors(fn);
   }
 
   @override
   void onMessage(MessageSocket fn) {
-    socketNotifier.addMessages(fn);
+    socketNotifier!.addMessages(fn);
   }
 
   @override
   void on(String event, MessageSocket message) {
-    socketNotifier.addEvents(event, message);
+    socketNotifier!.addEvents(event, message);
   }
 
   @override
-  void close([int status, String reason]) {
+  void close([int? status, String? reason]) {
     _ws.close(status, reason);
     _subs.cancel();
   }

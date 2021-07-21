@@ -1,20 +1,20 @@
 import '../../get_server.dart';
 import '../context/context_response.dart';
-import 'get_instance/lifecycle.dart';
+import '../framework/get_instance/src/lifecycle.dart';
 
-export 'get_instance/bindings_interface.dart';
-export 'get_instance/extension_instance.dart';
-export 'get_instance/get_instance.dart';
+export '../framework/get_instance/src/bindings_interface.dart';
+export '../framework/get_instance/src/extension_instance.dart';
+export '../framework/get_instance/src/get_instance.dart';
 
 class GetxController extends DisposableInterface {
-  BuildContext _context;
+  late BuildContext _context;
   void setContext(BuildContext c) {
     _context = c;
   }
 
-  ContextResponse get response => _context.response;
+  ContextResponse? get response => _context.response;
   ContextRequest get request => _context.request;
-  Map<String, dynamic> get params => request.params;
+  Map<String?, dynamic>? get params => request.params;
 }
 
 /// Unlike GetxController, which serves to control events on each of its pages,
@@ -25,4 +25,4 @@ class GetxController extends DisposableInterface {
 /// it is Get.reset().
 abstract class GetxService extends DisposableInterface with GetxServiceMixin {}
 
-abstract class DisposableInterface with GetLifeCycle {}
+abstract class DisposableInterface extends GetLifeCycle {}

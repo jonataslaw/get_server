@@ -1,7 +1,7 @@
 part of server;
 
 abstract class BuildContext {
-  ContextResponse get response;
+  ContextResponse? get response;
   ContextRequest get request;
 
   Method get method;
@@ -14,28 +14,28 @@ abstract class BuildContext {
 
 //  Stream<GetSocket> get ws;
 
-  GetSocket get getSocket;
+  GetSocket? get getSocket;
 
   Future send(Object string);
 
   Future sendBytes(List<int> data);
 
-  Future sendJson(Object string);
+  Future? sendJson(Object string);
 
   Future sendHtml(String path);
 
   Future<MultipartUpload> file(String name, {Encoding encoder = utf8});
 
-  String param(String name) => request.param(name);
+  String? param(String name) => request.param(name);
 
-  Future<Map> payload({Encoding encoder = utf8});
+  Future<Map?> payload({Encoding encoder = utf8});
 }
 
 @immutable
 abstract class Widget {
   const Widget({this.key});
 
-  final Key key;
+  final Key? key;
 
   /// Inflates this configuration to a concrete instance.
   /// A given widget can be included in the tree zero or more times.
@@ -47,7 +47,7 @@ abstract class Widget {
   /// multiple times.
   @protected
   @factory
-  Element createElement(ContextRequest request, GetSocket getSocket);
+  Element? createElement(ContextRequest request, GetSocket? getSocket);
 }
 
 abstract class Element implements BuildContext {
@@ -62,44 +62,41 @@ abstract class Element implements BuildContext {
   void performRebuild();
 
   @override
-  ContextResponse get response => request.response;
+  ContextResponse? get response => request.response;
   @override
   final ContextRequest request;
 
   @override
-  final GetSocket getSocket;
+  final GetSocket? getSocket;
 
   @override
   Future pageNotFound() {
-    return response.close();
+    return response!.close();
   }
 
   @override
   void statusCode(int code) {
-    if (code == null) {
-      return;
-    }
-    response.status(code);
+    response!.status(code);
   }
 
   @override
   Future close() {
-    return response.close();
+    return response!.close();
   }
 
   @override
   Future send(Object string) {
-    return response.send(string);
+    return response!.send(string);
   }
 
   @override
   Future sendBytes(List<int> data) {
-    return response.send(data);
+    return response!.send(data);
   }
 
   @override
-  Future sendJson(Object string) {
-    return response
+  Future? sendJson(Object string) {
+    return response!
         // this headers are not working
         .header('Content-Type', 'application/json; charset=UTF-8')
         .sendJson(string);
@@ -108,13 +105,14 @@ abstract class Element implements BuildContext {
   @override
   Future sendHtml(String path) {
     // this headers are not working
-    response.header('Content-Type', 'text/html; charset=UTF-8');
-    return response.sendFile(path);
+    response!.header('Content-Type', 'text/html; charset=UTF-8');
+    return response!.sendFile(path);
   }
 
   @override
   Future<MultipartUpload> file(String name, {Encoding encoder = utf8}) async {
-    final payload = await request.payload(encoder: encoder);
+    final payload = await (request.payload(encoder: encoder)
+        as FutureOr<Map<dynamic, dynamic>>);
     final multiPart = await payload[name];
     if (multiPart is MultipartUpload) {
       return multiPart;
@@ -126,18 +124,18 @@ abstract class Element implements BuildContext {
   }
 
   @override
-  String param(String name) => request.param(name);
+  String? param(String name) => request.param(name);
 
   @override
-  Future<Map> payload({Encoding encoder = utf8}) =>
+  Future<Map?> payload({Encoding encoder = utf8}) =>
       request.payload(encoder: encoder);
 }
 
 abstract class StatelessWidget extends Widget {
-  const StatelessWidget({Key key}) : super(key: key);
+  const StatelessWidget({Key? key}) : super(key: key);
 
   @override
-  StatelessElement createElement(ContextRequest request, GetSocket getSocket) {
+  StatelessElement createElement(ContextRequest request, GetSocket? getSocket) {
     return StatelessElement(this, request, getSocket);
     // element.performRebuild();
     // return element;
@@ -150,14 +148,14 @@ abstract class StatelessWidget extends Widget {
 class StatelessElement extends ComponentElement {
   /// Creates an element that uses the given widget as its configuration.
   StatelessElement(
-      StatelessWidget widget, ContextRequest request, GetSocket socketStream)
+      StatelessWidget widget, ContextRequest request, GetSocket? socketStream)
       : super(widget, request, socketStream) {
     performRebuild();
   }
 
   @override
   void performRebuild() {
-    build()..createElement(request, getSocket);
+    build().createElement(request, getSocket);
   }
 
   @override
@@ -175,7 +173,7 @@ abstract class ComponentElement extends Element {
   ComponentElement(
     Widget widget,
     ContextRequest request,
-    GetSocket getSocket,
+    GetSocket? getSocket,
   ) : super(
           widget,
           request,
@@ -183,17 +181,17 @@ abstract class ComponentElement extends Element {
         );
 
   @protected
-  Widget build();
+  Widget? build();
 }
 
 typedef VoidCallback = void Function();
 
 abstract class StatefulWidget extends Widget {
   /// Initializes [key] for subclasses.
-  const StatefulWidget({Key key}) : super(key: key);
+  const StatefulWidget({Key? key}) : super(key: key);
 
   @override
-  StatefulElement createElement(ContextRequest request, GetSocket getSocket) {
+  StatefulElement createElement(ContextRequest request, GetSocket? getSocket) {
     return StatefulElement(this, request, getSocket);
   }
 
@@ -205,7 +203,7 @@ abstract class StatefulWidget extends Widget {
 class StatefulElement extends ComponentElement {
   /// Creates an element that uses the given widget as its configuration.
   StatefulElement(
-      StatefulWidget widget, ContextRequest request, GetSocket socketStream)
+      StatefulWidget widget, ContextRequest request, GetSocket? socketStream)
       : state = widget.createState(),
         super(widget, request, socketStream) {
     activate();
@@ -213,7 +211,7 @@ class StatefulElement extends ComponentElement {
 
   @override
   void performRebuild() {
-    build()..createElement(request, getSocket);
+    build().createElement(request, getSocket);
   }
 
   @override
@@ -228,10 +226,10 @@ class StatefulElement extends ComponentElement {
 
   void activate() {
     state._element = this;
-    state._widget = widget;
+    state._widget = widget as StatefulWidget?;
     state.initState();
     performRebuild();
-    response.addDisposeCallback(unmount);
+    response!.addDisposeCallback(unmount);
   }
 
   void unmount() {
@@ -245,8 +243,8 @@ class StatefulElement extends ComponentElement {
 }
 
 abstract class State<T extends StatefulWidget> {
-  T get widget => _widget;
-  T _widget;
+  T get widget => _widget!;
+  T? _widget;
 
   BuildContext get context {
     assert(() {
@@ -257,10 +255,10 @@ abstract class State<T extends StatefulWidget> {
       }
       return true;
     }());
-    return _element;
+    return _element!;
   }
 
-  StatefulElement _element;
+  StatefulElement? _element;
 
   bool get mounted => _element != null;
 
@@ -274,9 +272,8 @@ abstract class State<T extends StatefulWidget> {
 
   @protected
   void setState(VoidCallback fn) {
-    assert(fn != null);
     fn();
-    _element.performRebuild();
+    _element!.performRebuild();
   }
 
   @protected

@@ -1,4 +1,16 @@
-import 'package:meta/meta.dart';
+import '../../get_core/get_core.dart';
+
+/// Special callable class to keep the contract of a regular method, and avoid
+/// overrides if you extend the class that uses it, as Dart has no final
+/// methods.
+/// Used in [DisposableInterface] to avoid the danger of overriding onStart.
+class _InternalFinalCallback<T> {
+  ValueUpdater<T>? _callback;
+
+  _InternalFinalCallback({ValueUpdater<T>? callback}) : _callback = callback;
+
+  T call() => _callback!.call();
+}
 
 /// The [GetLifeCycle]
 ///
@@ -9,13 +21,22 @@ import 'package:meta/meta.dart';
 ///   }
 /// }
 /// ```
-mixin GetLifeCycle {
+mixin GetLifeCycleBase {
+  /// Called at the exact moment the widget is allocated in memory.
+  /// It uses an internal "callable" type, to avoid any @overrides in subclases.
+  /// This method should be internal and is required to define the
+  /// lifetime cycle of the subclass.
+  final onStart = _InternalFinalCallback<void>();
+
   // /// The `configureLifeCycle` works as a constructor for the [GetLifeCycle]
   // ///
   // /// This method must be invoked in the constructor of the implementation
   // void configureLifeCycle() {
   //   if (_initialized) return;
   // }
+
+  /// Internal callback that starts the cycle of this controller.
+  final onDelete = _InternalFinalCallback<void>();
 
   /// Called immediately after the widget is allocated in memory.
   /// You might use this to initialize something for the controller.
@@ -39,16 +60,20 @@ mixin GetLifeCycle {
   /// Checks whether the controller has already been initialized.
   bool get initialized => _initialized;
 
+<<<<<<< HEAD:lib/src/infrastructure/get_instance/lifecycle.dart
   /// Called at the exact moment the widget is allocated in memory.
   /// It uses an internal "callable" type, to avoid any @overrides in subclases.
   /// This method should be internal and is required to define the
   /// lifetime cycle of the subclass.
   // @internal
   void onStart() {
+=======
+  // Internal callback that starts the cycle of this controller.
+  void _onStart() {
+>>>>>>> fe90ecfcffc068bc2e58e0fbb72711a854295244:lib/src/framework/get_instance/src/lifecycle.dart
     if (_initialized) return;
     onInit();
     _initialized = true;
-    Future.delayed(Duration.zero, onReady);
   }
 
   bool _isClosed = false;
@@ -57,11 +82,35 @@ mixin GetLifeCycle {
   bool get isClosed => _isClosed;
 
   // Internal callback that starts the cycle of this controller.
+<<<<<<< HEAD:lib/src/infrastructure/get_instance/lifecycle.dart
   // @internal
   void onDelete() {
+=======
+  void _onDelete() {
+>>>>>>> fe90ecfcffc068bc2e58e0fbb72711a854295244:lib/src/framework/get_instance/src/lifecycle.dart
     if (_isClosed) return;
     _isClosed = true;
     onClose();
+  }
+
+  void $configureLifeCycle() {
+    _checkIfAlreadyConfigured();
+    onStart._callback = _onStart;
+    onDelete._callback = _onDelete;
+  }
+
+  void _checkIfAlreadyConfigured() {
+    if (_initialized) {
+      throw """You can only call configureLifeCycle once. 
+The proper place to insert it is in your class's constructor 
+that inherits GetLifeCycle.""";
+    }
+  }
+}
+
+abstract class GetLifeCycle with GetLifeCycleBase {
+  GetLifeCycle() {
+    $configureLifeCycle();
   }
 }
 

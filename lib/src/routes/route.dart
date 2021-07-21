@@ -2,7 +2,6 @@ import 'dart:collection';
 import 'dart:io';
 
 import 'package:jaguar_jwt/jaguar_jwt.dart';
-import 'package:meta/meta.dart';
 
 import '../../get_server.dart';
 import '../context/context_request.dart';
@@ -24,11 +23,11 @@ typedef Disposer = Function();
 String enumValueToString(Object o) => o.toString().split('.').last;
 
 class Route {
-  final Bindings binding;
+  final Bindings? binding;
   final bool needAuth;
   final Map<String, HashSet<GetSocket>> _rooms = <String, HashSet<GetSocket>>{};
   final HashSet<GetSocket> _sockets = HashSet<GetSocket>();
-  final Widget widget;
+  final Widget? widget;
   final Map path;
 
   Route(
@@ -38,7 +37,9 @@ class Route {
     this.binding,
     // List<String> keys,
     this.needAuth = false,
-  });
+  }) {
+    binding?.dependencies();
+  }
 
   final Method method;
 
@@ -61,7 +62,7 @@ class Route {
     }
   }
 
-  void handle(HttpRequest req, {int status}) {
+  void handle(HttpRequest req, {int? status}) {
     var localMethod = method;
 
     if (method == Method.dynamic) {
@@ -71,7 +72,7 @@ class Route {
 
     request.params = RouteParser.parseParams(req.uri.path, path);
     request.response = ContextResponse(req.response);
-    if (status != null) request.response.status(status);
+    if (status != null) request.response!.status(status);
 
     _verifyAuth(
       req: request,
@@ -89,17 +90,17 @@ class Route {
   }
 
   void _sendResponse(ContextRequest request,
-      {GetSocket getSocket, Widget failure}) async {
+      {GetSocket? getSocket, Widget? failure}) async {
     if (failure != null) {
       // ignore: invalid_use_of_protected_member
       failure.createElement(request, getSocket);
     } else {
       // ignore: invalid_use_of_protected_member
-      widget.createElement(request, getSocket);
+      widget!.createElement(request, getSocket);
     }
   }
 
-  String _authHandler(ContextRequest req) {
+  String? _authHandler(ContextRequest req) {
     dynamic token = req.header('Authorization');
     try {
       if (token != null) {
@@ -107,9 +108,9 @@ class Route {
         if (token.contains('Bearer')) {
           token = token.replaceAll('Bearer ', '');
 
-          var key = TokenUtil.getJwtKey();
+          var key = TokenUtil.getJwtKey()!;
           var decClaimSet = verifyJwtHS256Signature(token, key);
-          if (decClaimSet.expiry.isBefore(DateTime.now())) {
+          if (decClaimSet.expiry!.isBefore(DateTime.now())) {
             return JwtException.tokenExpired.message;
           }
         } else {
@@ -127,8 +128,8 @@ class Route {
   }
 
   void _verifyAuth({
-    @required ContextRequest req,
-    @required void Function() successCallback,
+    required ContextRequest req,
+    required void Function() successCallback,
   }) {
     if (needAuth) {
       var message = _authHandler(req);
@@ -154,7 +155,7 @@ class Route {
 class RouteParser {
   static Map normalize(
     dynamic path, {
-    List<String> keys,
+    List<String?>? keys,
   }) {
     String stringPath = path;
     keys ??= [];
@@ -180,7 +181,7 @@ class RouteParser {
         replace.write('?');
       }
 
-      keys.add(placeholder[2]);
+      keys!.add(placeholder[2]);
 
       return replace.toString();
     }).replaceAll('//', '/');
@@ -188,15 +189,15 @@ class RouteParser {
     return {'regexp': RegExp('^$stringPath\$'), 'keys': keys};
   }
 
-  static Map<String, String> parseParams(String path, Map routePath) {
-    final params = <String, String>{};
-    Match paramsMatch = routePath['regexp'].firstMatch(path);
+  static Map<String?, String?> parseParams(String path, Map routePath) {
+    final params = <String?, String?>{};
+    Match? paramsMatch = routePath['regexp'].firstMatch(path);
     for (var i = 0; i < routePath['keys'].length; i++) {
-      String param;
+      String? param;
       try {
-        param = Uri.decodeQueryComponent(paramsMatch[i + 1]);
+        param = Uri.decodeQueryComponent(paramsMatch![i + 1]!);
       } catch (e) {
-        param = paramsMatch[i + 1];
+        param = paramsMatch![i + 1];
       }
 
       params[routePath['keys'][i]] = param;
@@ -205,8 +206,9 @@ class RouteParser {
   }
 
   static bool match(String uriPath, String method, Method _method, Map path) {
-    return ((enumValueToString(_method) == method?.toLowerCase() ||
-            _method == Method.dynamic) &&
+    return ((enumValueToString(_method) == method.toLowerCase() ||
+            _method == Method.dynamic ||
+            _method == Method.ws) &&
         path['regexp'].hasMatch(uriPath));
   }
 }

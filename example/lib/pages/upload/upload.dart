@@ -6,8 +6,8 @@ class UploadPage extends GetView {
     return MultiPartWidget(
       builder: (context, file) {
         return Json({
-          'file': file.data.toString(),
-          'mime': file.mimeType,
+          'file': file?.data.toString(),
+          'mime': file?.mimeType,
         });
       },
     );

@@ -1,20 +1,34 @@
 import 'dart:async';
 import 'dart:collection';
-import 'package:meta/meta.dart';
 
-import '../../../get_server.dart';
+import '../../get_core/get_core.dart';
+
 import 'lifecycle.dart';
+
+class InstanceInfo {
+  final bool? isPermanent;
+  final bool? isSingleton;
+  bool get isCreate => !isSingleton!;
+  final bool isRegistered;
+  final bool isPrepared;
+  final bool? isInit;
+  const InstanceInfo({
+    required this.isPermanent,
+    required this.isSingleton,
+    required this.isRegistered,
+    required this.isPrepared,
+    required this.isInit,
+  });
+}
 
 class GetInstance {
   factory GetInstance() => _getInstance ??= GetInstance._();
 
   const GetInstance._();
 
-  static GetInstance _getInstance;
+  static GetInstance? _getInstance;
 
-  T call<T>() {
-    return find<T>();
-  }
+  T call<T>() => find<T>();
 
   /// Holds references to every registered Instance when using
   /// [Get.put()]
@@ -22,17 +36,70 @@ class GetInstance {
 
   /// Holds a reference to every registered callback when using
   /// [Get.lazyPut()]
-  static final Map<String, _Lazy> _factory = {};
+  // static final Map<String, _Lazy> _factory = {};
 
   /// Holds a reference to [Get.reference] when the Instance was
   /// created to manage the memory.
-  static final Map<String, String> _routesKey = {};
+  static final Map<String, String?> _routesKey = {};
 
   /// Stores the onClose() references of instances created with [Get.create()]
   /// using the [Get.reference].
   /// Experimental feature to keep the lifecycle and memory management with
   /// non-singleton instances.
-  static final Map<String, HashSet<Function>> _routesByCreate = {};
+  static final Map<String?, HashSet<Function>> _routesByCreate = {};
+
+  void printInstanceStack() {
+    Get.log(_routesKey.toString());
+  }
+
+  void injector<S>(
+    InjectorBuilderCallback<S> fn, {
+    String? tag,
+    bool fenix = false,
+    //  bool permanent = false,
+  }) {
+    lazyPut(
+      () => fn(this),
+      tag: tag,
+      fenix: fenix,
+      // permanent: permanent,
+    );
+  }
+
+  /// async version of [Get.put()].
+  /// Awaits for the resolution of the Future from [builder()] parameter and
+  /// stores the Instance returned.
+  Future<S> putAsync<S>(
+    AsyncInstanceBuilderCallback<S> builder, {
+    String? tag,
+    bool permanent = false,
+  }) async {
+    return put<S>(await builder(), tag: tag, permanent: permanent);
+  }
+
+  /// Injects an instance <[S]> in memory to be globally accessible.
+  ///
+  /// No need to define the generic type <[S]> as it's inferred from
+  /// the [dependency]
+  ///
+  /// - [dependency] The Instance to be injected.
+  /// - [tag] optionally, use a [tag] as an "id" to create multiple records of
+  /// the same Type<[S]>
+  /// - [permanent] keeps the Instance in memory, not following
+  /// [Get.smartManagement] rules.
+  S put<S>(
+    S dependency, {
+    String? tag,
+    bool permanent = false,
+    @deprecated InstanceBuilderCallback<S>? builder,
+  }) {
+    _insert(
+        isSingleton: true,
+        name: tag,
+        permanent: permanent,
+        builder: builder ?? (() => dependency));
+    return find<S>(tag: tag);
+  }
 
   /// Creates a new Instance<S> lazily from the [<S>builder()] callback.
   ///
@@ -58,60 +125,17 @@ class GetInstance {
   /// (<[S]> and optionally [tag] will **not** override the original).
   void lazyPut<S>(
     InstanceBuilderCallback<S> builder, {
-    String tag,
-    bool fenix = false,
-  }) {
-    final key = _getKey(S, tag);
-    _factory.putIfAbsent(key, () => _Lazy(builder, fenix));
-  }
-
-  void injector<S>(
-    InjectorBuilderCallback<S> fn, {
-    String tag,
-    bool fenix = false,
-    //  bool permanent = false,
-  }) {
-    lazyPut(
-      () => fn(this),
-      tag: tag,
-      fenix: fenix,
-      // permanent: permanent,
-    );
-  }
-
-  /// async version of [Get.put()].
-  /// Awaits for the resolution of the Future from [builder()] parameter and
-  /// stores the Instance returned.
-  Future<S> putAsync<S>(
-    AsyncInstanceBuilderCallback<S> builder, {
-    String tag,
+    String? tag,
+    bool? fenix,
     bool permanent = false,
-  }) async {
-    return put<S>(await builder(), tag: tag, permanent: permanent);
-  }
-
-  /// Injects an instance <[S]> in memory to be globally accessible.
-  ///
-  /// No need to define the generic type <[S]> as it's inferred from
-  /// the [dependency]
-  ///
-  /// - [dependency] The Instance to be injected.
-  /// - [tag] optionally, use a [tag] as an "id" to create multiple records of
-  /// the same Type<[S]>
-  /// - [permanent] keeps the Instance in memory, not following
-  /// [Get.smartManagement] rules.
-  S put<S>(
-    S dependency, {
-    String tag,
-    bool permanent = false,
-    @deprecated InstanceBuilderCallback<S> builder,
   }) {
     _insert(
-        isSingleton: true,
-        name: tag,
-        permanent: permanent,
-        builder: builder ?? (() => dependency));
-    return find<S>(tag: tag);
+      isSingleton: true,
+      name: tag,
+      permanent: permanent,
+      builder: builder,
+      fenix: fenix ?? Get.smartManagement == SmartManagement.keepFactory,
+    );
   }
 
   /// Creates a new Class Instance [S] from the builder callback[S].
@@ -132,26 +156,37 @@ class GetInstance {
   /// print(a==b); (false)```
   void create<S>(
     InstanceBuilderCallback<S> builder, {
-    String tag,
+    String? tag,
     bool permanent = true,
   }) {
     _insert(
-        isSingleton: false, name: tag, builder: builder, permanent: permanent);
+      isSingleton: false,
+      name: tag,
+      builder: builder,
+      permanent: permanent,
+    );
   }
 
   /// Injects the Instance [S] builder into the [_singleton] HashMap.
   void _insert<S>({
-    bool isSingleton,
-    String name,
+    bool? isSingleton,
+    String? name,
     bool permanent = false,
-    @required InstanceBuilderCallback<S> builder,
+    required InstanceBuilderCallback<S> builder,
+    bool fenix = false,
   }) {
-    assert(builder != null);
     final key = _getKey(S, name);
     _singl.putIfAbsent(
-        key,
-        () =>
-            _InstanceBuilderFactory<S>(isSingleton, builder, permanent, false));
+      key,
+      () => _InstanceBuilderFactory<S>(
+        isSingleton,
+        builder,
+        permanent,
+        false,
+        fenix,
+        name,
+      ),
+    );
   }
 
   /// Clears from memory registered Instances associated with [routeName] when
@@ -168,14 +203,12 @@ class GetInstance {
 
     /// Removes [Get.create()] instances registered in [routeName].
     if (_routesByCreate.containsKey(routeName)) {
-      for (final onClose in _routesByCreate[routeName]) {
+      for (final onClose in _routesByCreate[routeName]!) {
         // assure the [DisposableInterface] instance holding a reference
         // to [onClose()] wasn't disposed.
-        if (onClose != null) {
-          onClose();
-        }
+        onClose();
       }
-      _routesByCreate[routeName].clear();
+      _routesByCreate[routeName]!.clear();
       _routesByCreate.remove(routeName);
     }
 
@@ -184,7 +217,7 @@ class GetInstance {
     }
 
     for (final element in keysToRemove) {
-      _routesKey?.remove(element);
+      _routesKey.remove(element);
     }
     keysToRemove.clear();
   }
@@ -198,14 +231,14 @@ class GetInstance {
   /// (not for Singletons access).
   /// Returns the instance if not initialized, required for Get.create() to
   /// work properly.
-  S _initDependencies<S>({String name}) {
+  S? _initDependencies<S>({String? name}) {
     final key = _getKey(S, name);
-    final isInit = _singl[key].isInit;
-    S i;
+    final isInit = _singl[key]!.isInit;
+    S? i;
     if (!isInit) {
       i = _startController<S>(tag: name);
-      if (_singl[key].isSingleton) {
-        _singl[key].isInit = true;
+      if (_singl[key]!.isSingleton!) {
+        _singl[key]!.isInit = true;
         if (Get.smartManagement != SmartManagement.onlyBuilder) {
           _registerRouteInstance<S>(tag: name);
         }
@@ -216,44 +249,59 @@ class GetInstance {
 
   /// Links a Class instance [S] (or [tag]) to the current route.
   /// Requires usage of [GetMaterialApp].
-  void _registerRouteInstance<S>({String tag}) {
+  void _registerRouteInstance<S>({String? tag}) {
     _routesKey.putIfAbsent(_getKey(S, tag), () => Get.reference);
   }
 
+  InstanceInfo getInstanceInfo<S>({String? tag}) {
+    final build = _getDependency<S>(tag: tag);
+
+    return InstanceInfo(
+      isPermanent: build?.permanent,
+      isSingleton: build?.isSingleton,
+      isRegistered: isRegistered<S>(tag: tag),
+      isPrepared: !(build?.isInit ?? true),
+      isInit: build?.isInit,
+    );
+  }
+
+  _InstanceBuilderFactory? _getDependency<S>({String? tag, String? key}) {
+    final newKey = key ?? _getKey(S, tag);
+
+    if (!_singl.containsKey(newKey)) {
+      Get.log('Instance "$newKey" is not registered.', isError: true);
+      return null;
+    } else {
+      return _singl[newKey];
+    }
+  }
+
   /// Initializes the controller
-  S _startController<S>({String tag}) {
+  S _startController<S>({String? tag}) {
     final key = _getKey(S, tag);
-    final i = _singl[key].getDependency() as S;
-    if (i is GetLifeCycle) {
-      if (i.onStart != null) {
-        i.onStart();
-        Get.log('"$key" has been initialized');
+    final i = _singl[key]!.getDependency() as S;
+    if (i is GetLifeCycleBase) {
+      i.onStart();
+      if (tag == null) {
+        Get.log('Instance "$S" has been initialized');
+      } else {
+        Get.log('Instance "$S" with tag "$tag" has been initialized');
       }
-      if (!_singl[key].isSingleton && i.onDelete != null) {
+      if (!_singl[key]!.isSingleton!) {
         _routesByCreate[Get.reference] ??= HashSet<Function>();
-        _routesByCreate[Get.reference].add(i.onDelete);
+        // _routesByCreate[Get.reference]!.add(i.onDelete as Function);
+        _routesByCreate[Get.reference]!.add(i.onDelete);
       }
     }
     return i;
   }
 
-  S putOrFind<S>(InstanceBuilderCallback<S> dep, {String tag}) {
+  S putOrFind<S>(InstanceBuilderCallback<S> dep, {String? tag}) {
     final key = _getKey(S, tag);
 
     if (_singl.containsKey(key)) {
-      return _singl[key].getDependency() as S;
+      return _singl[key]!.getDependency() as S;
     } else {
-      if (_factory.containsKey(key)) {
-        final _value = put<S>((_factory[key].builder() as S), tag: tag);
-
-        if (Get.smartManagement != SmartManagement.keepFactory) {
-          if (!_factory[key].fenix) {
-            _factory.remove(key);
-          }
-        }
-        return _value;
-      }
-
       return GetInstance().put(dep(), tag: tag);
     }
   }
@@ -263,7 +311,7 @@ class GetInstance {
   /// it will create an instance each time you call [find].
   /// If the registered type <[S]> (or [tag]) is a Controller,
   /// it will initialize it's lifecycle.
-  S find<S>({String tag}) {
+  S find<S>({String? tag}) {
     final key = _getKey(S, tag);
     if (isRegistered<S>(tag: tag)) {
       if (_singl[key] == null) {
@@ -278,29 +326,16 @@ class GetInstance {
       /// `initDependencies`, so we have to return the instance from there
       /// to make it compatible with `Get.create()`.
       final i = _initDependencies<S>(name: tag);
-      return i ?? _singl[key].getDependency() as S;
+      return i ?? _singl[key]!.getDependency() as S;
     } else {
-      if (!_factory.containsKey(key)) {
-        // ignore: lines_longer_than_80_chars
-        throw '"$S" not found. You need to call "Get.put($S())" or "Get.lazyPut(()=>$S())"';
-      }
-
-      Get.log('Lazy instance "$S" created');
-      final _value = put<S>(_factory[key].builder() as S, tag: tag);
-      _initDependencies<S>(name: tag);
-
-      if (Get.smartManagement != SmartManagement.keepFactory &&
-          !_factory[key].fenix) {
-        _factory.remove(key);
-      }
-
-      return _value;
+      // ignore: lines_longer_than_80_chars
+      throw '"$S" not found. You need to call "Get.put($S())" or "Get.lazyPut(()=>$S())"';
     }
   }
 
   /// Generates the key based on [type] (and optionally a [name])
   /// to register an Instance Builder in the hashmap.
-  String _getKey(Type type, String name) {
+  String _getKey(Type type, String? name) {
     return name == null ? type.toString() : type.toString() + name;
   }
 
@@ -311,7 +346,7 @@ class GetInstance {
   /// [clearRouteBindings] clears Instances associated with routes.
   ///
   bool reset({bool clearFactory = true, bool clearRouteBindings = true}) {
-    if (clearFactory) _factory.clear();
+    //  if (clearFactory) _factory.clear();
     if (clearRouteBindings) _routesKey.clear();
     _singl.clear();
     return true;
@@ -333,13 +368,7 @@ class GetInstance {
   /// - [key] For internal usage, is the processed key used to register
   ///   the Instance. **don't use** it unless you know what you are doing.
   /// - [force] Will delete an Instance even if marked as [permanent].
-  bool delete<S>({String tag, String key, bool force = false}) {
-    // return _queue.secure<bool>(() {
-    return _delete<S>(tag: tag, key: key, force: force);
-    // });
-  }
-
-  bool _delete<S>({String tag, String key, bool force = false}) {
+  bool delete<S>({String? tag, String? key, bool force = false}) {
     final newKey = key ?? _getKey(S, tag);
 
     if (!_singl.containsKey(newKey)) {
@@ -347,7 +376,8 @@ class GetInstance {
       return false;
     }
 
-    final builder = _singl[newKey];
+    final builder = _singl[newKey]!;
+
     if (builder.permanent && !force) {
       Get.log(
         // ignore: lines_longer_than_80_chars
@@ -361,29 +391,78 @@ class GetInstance {
     if (i is GetxServiceMixin && !force) {
       return false;
     }
-    if (i is GetLifeCycle) {
+
+    if (i is GetLifeCycleBase) {
       i.onDelete();
-      Get.log('"$newKey" onClose() called');
+      Get.log('"$newKey" onDelete() called');
     }
 
-    _singl.removeWhere((oldKey, value) => (oldKey == newKey));
-    if (_singl.containsKey(newKey)) {
-      Get.log('Error removing object "$newKey"', isError: true);
+    if (builder.fenix) {
+      builder.dependency = null;
+      builder.isInit = false;
     } else {
-      Get.log('"$newKey" deleted from memory');
+      _singl.remove(newKey);
+      if (_singl.containsKey(newKey)) {
+        Get.log('Error removing object "$newKey"', isError: true);
+      } else {
+        Get.log('"$newKey" deleted from memory');
+      }
     }
-    // _routesKey?.remove(key);
+
     return true;
+  }
+
+  void reloadAll({bool force = false}) {
+    _singl.forEach((key, value) {
+      if (value.permanent && !force) {
+        Get.log('Instance "$key" is permanent. Skipping reload');
+      } else {
+        value.dependency = null;
+        value.isInit = false;
+        Get.log('Instance "$key" was reloaded.');
+      }
+    });
+  }
+
+  void reload<S>({String? tag, String? key, bool force = false}) {
+    final newKey = key ?? _getKey(S, tag);
+
+    final builder = _getDependency<S>(tag: tag, key: newKey);
+    if (builder == null) return;
+
+    if (builder.permanent && !force) {
+      Get.log(
+        '''Instance "$newKey" is permanent. Use [force = true] to force the restart.''',
+        isError: true,
+      );
+      return;
+    }
+
+    builder.dependency = null;
+    builder.isInit = false;
+    Get.log('Instance "$newKey" was restarted.');
   }
 
   /// Check if a Class Instance<[S]> (or [tag]) is registered in memory.
   /// - [tag] is optional, if you used a [tag] to register the Instance.
-  bool isRegistered<S>({String tag}) => _singl.containsKey(_getKey(S, tag));
+  bool isRegistered<S>({String? tag}) => _singl.containsKey(_getKey(S, tag));
 
   /// Checks if a lazy factory callback ([Get.lazyPut()] that returns an
   /// Instance<[S]> is registered in memory.
   /// - [tag] is optional, if you used a [tag] to register the lazy Instance.
-  bool isPrepared<S>({String tag}) => _factory.containsKey(_getKey(S, tag));
+  bool isPrepared<S>({String? tag}) {
+    final newKey = _getKey(S, tag);
+
+    final builder = _getDependency<S>(tag: tag, key: newKey);
+    if (builder == null) {
+      return false;
+    }
+
+    if (!builder.isInit) {
+      return true;
+    }
+    return false;
+  }
 }
 
 typedef InstanceBuilderCallback<S> = S Function();
@@ -396,10 +475,14 @@ typedef AsyncInstanceBuilderCallback<S> = Future<S> Function();
 class _InstanceBuilderFactory<S> {
   /// Marks the Builder as a single instance.
   /// For reusing [dependency] instead of [builderFunc]
-  bool isSingleton;
+  bool? isSingleton;
+
+  /// When fenix mode is avaliable, when a new instance is need
+  /// Instance manager will recreate a new instance of S
+  bool fenix;
 
   /// Stores the actual object instance when [isSingleton]=true.
-  S dependency;
+  S? dependency;
 
   /// Generates (and regenerates) the instance when [isSingleton]=false.
   /// Usually used by factory methods
@@ -411,25 +494,35 @@ class _InstanceBuilderFactory<S> {
 
   bool isInit = false;
 
+  String? tag;
+
   _InstanceBuilderFactory(
     this.isSingleton,
     this.builderFunc,
     this.permanent,
     this.isInit,
+    this.fenix,
+    this.tag,
   );
+
+  void _showInitLog() {
+    if (tag == null) {
+      Get.log('Instance "$S" has been created');
+    } else {
+      Get.log('Instance "$S" has been created with tag "$tag"');
+    }
+  }
 
   /// Gets the actual instance by it's [builderFunc] or the persisted instance.
   S getDependency() {
-    return isSingleton ? dependency ??= builderFunc() : builderFunc();
+    if (isSingleton!) {
+      if (dependency == null) {
+        _showInitLog();
+        dependency = builderFunc();
+      }
+      return dependency!;
+    } else {
+      return builderFunc();
+    }
   }
-}
-
-/// Internal class to register a future instance with [lazyPut],
-/// keeps a reference to the callback to be called.
-class _Lazy {
-  bool fenix;
-  bool permanent = false;
-  InstanceBuilderCallback builder;
-
-  _Lazy(this.builder, this.fenix);
 }

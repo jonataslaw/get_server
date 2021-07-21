@@ -4,10 +4,10 @@ import '../data/data_repository/user_repository.dart';
 
 class UserController extends GetxController {
   final IUserRepository repository;
-  UserController({this.repository});
+  UserController({required this.repository});
 
   User getUser(ContextRequest req) {
-    var name = req.params['name'];
+    var name = req.params!['name'];
     return repository.fetchUser(name);
   }
 }
