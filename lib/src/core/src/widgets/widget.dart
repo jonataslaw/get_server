@@ -229,6 +229,9 @@ class StatefulElement extends ComponentElement {
     state._widget = widget as StatefulWidget?;
     state.initState();
     performRebuild();
+
+    request.input.response.done.then((value) => unmount());
+
     response!.addDisposeCallback(unmount);
   }
 

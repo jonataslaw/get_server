@@ -3,30 +3,23 @@ import '../../get_core/src/get_interface.dart';
 import 'get_instance.dart';
 
 extension Inst on GetInterface {
-  /// Creates a new Instance<S> lazily from the [<S>builder()] callback.
+  /// Creates a new Instance<S> lazily from the <S>builder() callback.
   ///
-  /// The first time you call [Get.find()], the [builder()] callback will create
+  /// The first time you call Get.find(), the [builder()] callback will create
   /// the Instance and persisted as a Singleton (like you would use
-  /// [Get.put()]).
-  ///
-  /// Using [Get.smartManagement] as [SmartManagement.keepFactory] has
-  /// the same outcome
-  /// as using [fenix:true] :
-  /// The internal register of [builder()] will remain in memory to recreate
-  /// the Instance if the Instance has been removed with [Get.delete()].
-  /// Therefore, future calls to [Get.find()] will return the same Instance.
-  ///
+  /// Get.put()).
+
   /// If you need to make use of GetxController's life-cycle
-  /// ([onInit(), onStart(), onClose()])
-  /// [fenix] is a great choice to mix with [GetBuilder()] and [GetX()] widgets,
-  /// and/or [GetMaterialApp] Navigation.
+  /// (onInit(), onStart(), onClose())
+  /// [fenix] is a great choice to mix with GetBuilder() and GetX() widgets,
+  /// and/or GetMaterialApp Navigation.
   ///
-  /// You could use [Get.lazyPut(fenix:true)] in your app's [main()] instead of
-  /// [Bindings()] for each [GetPage].
+  /// You could use Get.lazyPut(fenix:true) in your app's main() instead of
+  /// Bindings() for each GetPage.
   /// And the memory management will be similar.
   ///
-  /// Subsequent calls to [Get.lazyPut()] with the same parameters
-  /// (<[S]> and optionally [tag] will **not** override the original).
+  /// Subsequent calls to Get.lazyPut() with the same parameters
+  /// (<S> and optionally tag will **not** override the original).
   void lazyPut<S>(InstanceBuilderCallback<S> builder,
       {String? tag, bool fenix = false}) {
     GetInstance().lazyPut<S>(builder, tag: tag, fenix: fenix);
@@ -36,8 +29,8 @@ extension Inst on GetInterface {
     GetInstance().printInstanceStack();
   }
 
-  /// async version of [Get.put()].
-  /// Awaits for the resolution of the Future from [builder()] parameter and
+  /// async version of Get.put().
+  /// Awaits for the resolution of the Future from builder() parameter and
   /// stores the Instance returned.
   Future<S> putAsync<S>(AsyncInstanceBuilderCallback<S> builder,
           {String? tag, bool permanent = false}) async =>
@@ -81,7 +74,7 @@ extension Inst on GetInterface {
   /// - [permanent] keeps the Instance in memory and persist it,
   /// not following [Get.smartManagement]
   /// rules. Although, can be removed by [GetInstance.reset()]
-  /// and [Get.delete()]
+  /// and Get.delete()
   /// - [builder] If defined, the [dependency] must be returned from here
   S put<S>(S dependency,
           {String? tag,

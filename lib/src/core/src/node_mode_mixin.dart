@@ -55,13 +55,13 @@ mixin NodeMode {
     ));
   }
 
-  void ws(String name, NodeWidgetCallback build, {List<String?>? keys}) {
+  void ws(String name, SocketBuilder build, {List<String?>? keys}) {
     final path = RouteParser.normalize(name, keys: keys);
     RouteConfig.i.addRoute(Route(
       Method.ws,
       path,
       NodeWidgetWrapper(
-        builder: (context) => build(context),
+        builder: (context) => Socket(builder: build),
       ),
     ));
   }

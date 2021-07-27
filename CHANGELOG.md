@@ -1,3 +1,7 @@
+# [1.1.1]
+- Fix nodeJS way example on readme
+- Fix dispose method on nested StatefulWidgets
+
 # [1.1.0]
 - Add emitToRoom, improve structure, fix errors on Nodejs mode, and remove deprecated packages
 

@@ -208,22 +208,21 @@ The purpose of this package is to make development for Flutter developers easier
 With get_server you can use this path. You can use get_server as well:
 
 ```dart
+import 'package:get_server/get_server.dart';
 void main() {
   final app = GetServer();
   app.get('/', (ctx) => Text('Get_server of javascript way'));
-  app.ws('/socket', (res) {
-    res.ws.listen((socket) {
-      socket.onMessage((data) {
-        print('data: $data');
-      });
+  app.ws('/socket', (ws) {
+    ws.onMessage((data) {
+      print('data: $data');
+    });
 
-      socket.onOpen((ws) {
-        print('new socket opened');
-      });
+    ws.onOpen((ws) {
+      print('new socket opened');
+    });
 
-      socket.onClose((ws) {
-        print('socket has been closed');
-      });
+    ws.onClose((ws) {
+      print('socket has been closed');
     });
   });
 }

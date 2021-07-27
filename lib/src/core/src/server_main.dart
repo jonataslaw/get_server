@@ -8,11 +8,6 @@ void runIsolate(void Function(dynamic _) isol) {
   }
 }
 
-class Foo extends ContextRequest {
-  Foo(HttpRequest request, Method requestMethod)
-      : super(request, requestMethod);
-}
-
 void runApp(Widget widget) {
   if (widget is GetServerApp) {
     widget._createServer();
