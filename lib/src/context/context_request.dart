@@ -115,6 +115,19 @@ class ContextRequest {
                 formData.contentTransferEncoding,
                 data);
           }
+          
+           if (payload[parameters?['name']] != null) {
+            List<int> listT = [];
+            listT.addAll(payload[parameters?['name']].data);
+            listT.addAll(data.data);
+
+            data = MultipartUpload(
+                parameters?['filename'],
+                formData.contentType!.mimeType,
+                formData.contentTransferEncoding,
+                listT);
+          }
+          
           payload[parameters?['name']] = data;
         });
       }, onDone: () {
