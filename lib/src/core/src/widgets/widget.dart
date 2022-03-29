@@ -111,9 +111,8 @@ abstract class Element implements BuildContext {
 
   @override
   Future<MultipartUpload> file(String name, {Encoding encoder = utf8}) async {
-    final payload = await (request.payload(encoder: encoder)
-        as FutureOr<Map<dynamic, dynamic>>);
-    final multiPart = await payload[name];
+    final payload = await (request.payload(encoder: encoder));
+    final multiPart = await payload?[name];
     if (multiPart is MultipartUpload) {
       return multiPart;
     } else {
