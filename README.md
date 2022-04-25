@@ -203,6 +203,53 @@ class SocketPage extends GetView {
 
 Dart is not popular for servers, however, attracting people who already program in Flutter to the backend is now also a mission of GetX. Transforming one-dimensional programmers into full stack developers with 0% learning curve, and reusing code is also one of GetX's goals, and I hope you will help us on this journey.
 
+
+The CI with Get Server is easy, you can write a file with the content above and put in `.github/workflows/main.yml` and then you will have as artifacts, your server's binary compilation for linux/windows/mac with each merge.
+
+
+```yaml
+name: CI Building native server
+
+on:
+  # Triggers the workflow on push or pull request events but only for the main branch
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+        include:
+          - os: ubuntu-latest
+            output-name: server-linux
+          - os: macOS-latest
+            output-name: server-mac
+          - os: windows-latest
+            output-name: server-windows.exe
+    steps:
+          - uses: actions/checkout@v2
+          - uses: dart-lang/setup-dart@v1.3
+          - name: Install dependencies
+            run: dart pub get
+          - run: mkdir build
+          - name: Install Dependencies
+            run: dart pub get
+          - run: dart compile exe ./lib/main.dart -v -o build/${{ matrix.output-name }}
+          - uses: actions/upload-artifact@v1
+            with:
+                name: native-executables
+                path: build
+
+```
+
 ### Like most of the "node.js" way?
 The purpose of this package is to make development for Flutter developers easier. However, the javascript ecosystem is very large and you may be used to a more functional syntax.
 With get_server you can use this path. You can use get_server as well:
