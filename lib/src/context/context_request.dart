@@ -105,18 +105,23 @@ class ContextRequest {
       MimeMultipartTransformer(boundary)
           .bind(_request)
           .map(HttpMultipartFormData.parse)
-          .listen((formData) {
+          .listen((formData) async {
         var parameters = formData.contentDisposition.parameters;
-        formData.listen((data) {
-          if (formData.contentType != null) {
-            data = MultipartUpload(
-                parameters?['filename'],
-                formData.contentType!.mimeType,
-                formData.contentTransferEncoding,
-                data);
-          }
+        final bytes = <int>[];
+        await for (final chunk in formData) {
+          bytes.addAll(chunk);
+        }
+
+        if (formData.contentType != null) {
+          final data = MultipartUpload(
+              parameters?['filename'],
+              formData.contentType!.mimeType,
+              formData.contentTransferEncoding,
+              bytes);
           payload[parameters?['name']] = data;
-        });
+        } else {
+          payload[parameters?['name']] = bytes;
+        }
       }, onDone: () {
         completer.complete(payload);
       });

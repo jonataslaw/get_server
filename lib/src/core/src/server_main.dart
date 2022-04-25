@@ -2,12 +2,12 @@ part of server;
 
 void runIsolate(void Function(dynamic _) isol) {
   isol(null);
-  // final list = List.generate(Platform.numberOfProcessors - 1, (index) => null);
-  
-  // Dart works well with 1 main thread and 2 threads. That's what brings the best 
-  // performance possible. Increasing the number of isolates, regardless of the 
+  final list = List.generate(Platform.numberOfProcessors - 1, (index) => null);
+
+  // Dart works well with 1 main thread and 2 threads. That's what brings the best
+  // performance possible. Increasing the number of isolates, regardless of the
   // number of cpus, will degrade performance.
-  for (int i = 0; i < 2; i++){
+  for (var item in list) {
     Isolate.spawn(isol, item);
   }
 }
