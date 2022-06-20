@@ -29,8 +29,8 @@ class SocketNotifier {
     _tryOn(data);
   }
 
-  void notifyClose(Close err, GetSocket _ws) {
-    Get.log('Socket ${_ws.hashCode} is been disposed');
+  void notifyClose(Close err, GetSocket newWs) {
+    Get.log('Socket ${newWs.hashCode} is been disposed');
 
     for (var item in _onCloses!) {
       item(err);

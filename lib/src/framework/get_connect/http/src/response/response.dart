@@ -1,5 +1,6 @@
 import 'dart:collection';
 import 'dart:convert';
+
 import '../exceptions/exceptions.dart';
 import '../request/request.dart';
 import '../status/http_status.dart';
@@ -128,7 +129,11 @@ class HeaderValue {
     stringBuffer.write(_value);
     if (parameters != null && parameters!.isNotEmpty) {
       _parameters!.forEach((name, value) {
-        stringBuffer..write('; ')..write(name)..write('=')..write(value);
+        stringBuffer
+          ..write('; ')
+          ..write(name)
+          ..write('=')
+          ..write(value);
       });
     }
     return stringBuffer.toString();
@@ -192,7 +197,7 @@ class HeaderValue {
       }
 
       String? parseParameterValue() {
-        if (!done() && value[index] == '\"') {
+        if (!done() && value[index] == '"') {
           var stringBuffer = StringBuffer();
           index++;
           while (!done()) {
@@ -200,11 +205,11 @@ class HeaderValue {
               if (index + 1 == value.length) {
                 throw StateError('Failed to parse header value');
               }
-              if (preserveBackslash && value[index + 1] != '\"') {
+              if (preserveBackslash && value[index + 1] != '"') {
                 stringBuffer.write(value[index]);
               }
               index++;
-            } else if (value[index] == '\"') {
+            } else if (value[index] == '"') {
               index++;
               break;
             }

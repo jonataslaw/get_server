@@ -61,14 +61,14 @@ class RxList<E> extends ListMixin<E>
   }
 
   @override
-  void add(E item) {
-    _value.add(item);
+  void add(E element) {
+    _value.add(element);
     refresh();
   }
 
   @override
-  void addAll(Iterable<E> item) {
-    _value.addAll(item);
+  void addAll(Iterable<E> iterable) {
+    _value.addAll(iterable);
     refresh();
   }
 

@@ -108,7 +108,7 @@ class _GetSocketImpl implements GetSocket {
   @override
   void sendToRoom(String? room, Object message) {
     _checkAvailable();
-    if (rooms.containsKey(room) && rooms[room]!.contains(_ws)) {
+    if (rooms.containsKey(room) && rooms[room]!.contains(this)) {
       for (var element in rooms[room]!) {
         element.send(message);
       }
@@ -118,7 +118,7 @@ class _GetSocketImpl implements GetSocket {
   @override
   void emitToRoom(String event, String? room, Object message) {
     _checkAvailable();
-    if (rooms.containsKey(room) && rooms[room]!.contains(_ws)) {
+    if (rooms.containsKey(room) && rooms[room]!.contains(this)) {
       for (var element in rooms[room]!) {
         element.emit(event, message);
       }

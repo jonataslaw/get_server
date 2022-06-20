@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:collection';
 
 import '../../get_core/get_core.dart';
-
 import 'lifecycle.dart';
 
 class InstanceInfo {
@@ -91,13 +90,12 @@ class GetInstance {
     S dependency, {
     String? tag,
     bool permanent = false,
-    @deprecated InstanceBuilderCallback<S>? builder,
   }) {
     _insert(
         isSingleton: true,
         name: tag,
         permanent: permanent,
-        builder: builder ?? (() => dependency));
+        builder: (() => dependency));
     return find<S>(tag: tag);
   }
 

@@ -1,3 +1,6 @@
+# [1.2.0]
+- Fix send to room method
+
 # [1.1.1]
 - Fix nodeJS way example on readme
 - Fix dispose method on nested StatefulWidgets

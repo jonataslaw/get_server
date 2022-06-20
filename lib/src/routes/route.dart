@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:jaguar_jwt/jaguar_jwt.dart';
 
 import '../../get_server.dart';
-import '../context/context_request.dart';
 import '../context/context_response.dart';
 
 enum Method {
@@ -165,7 +164,7 @@ class RouteParser {
       var replace = StringBuffer('(?:');
 
       if (placeholder[1] != null) {
-        replace.write('\.');
+        replace.write('.');
       }
 
       replace.write('([\\w%+-._~!\$&\'()*,;=:@]+))');
@@ -198,10 +197,10 @@ class RouteParser {
     return params;
   }
 
-  static bool match(String uriPath, String method, Method _method, Map path) {
-    return ((enumValueToString(_method) == method.toLowerCase() ||
-            _method == Method.dynamic ||
-            _method == Method.ws) &&
+  static bool match(String uriPath, String method, Method newMethod, Map path) {
+    return ((enumValueToString(newMethod) == method.toLowerCase() ||
+            newMethod == Method.dynamic ||
+            newMethod == Method.ws) &&
         path['regexp'].hasMatch(uriPath));
   }
 }
