@@ -262,9 +262,9 @@ class GetConnect extends GetConnectInterface {
   }) {
     _checkIfDisposed(isHttp: false);
 
-    final _socket = GetSocketClient(_concatUrl(url)!, ping: ping);
-    sockets.add(_socket);
-    return _socket;
+    final newSocket = GetSocketClient(_concatUrl(url)!, ping: ping);
+    sockets.add(newSocket);
+    return newSocket;
   }
 
   String? _concatUrl(String? url) {

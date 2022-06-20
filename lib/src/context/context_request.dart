@@ -1,10 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:mime/mime.dart';
+
 import '../../get_server.dart';
 import 'context_response.dart';
-import 'dart:convert' show utf8;
 
 class MultipartUpload {
   final String? name;
@@ -21,7 +22,7 @@ class MultipartUpload {
   dynamic toJson() => {
         'name': name,
         'mimeType': mimeType,
-        'fileBase64': data == null ? null : '${base64Encode(data)}',
+        'fileBase64': data == null ? null : base64Encode(data),
         'transferEncoding': '$contentTransferEncoding'
       };
 

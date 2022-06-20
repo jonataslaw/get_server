@@ -141,9 +141,9 @@ class ContextResponse {
   }
 
   Future close() {
-    final _close = _response.close();
+    final newClose = _response.close();
     _dispose?.call();
-    return _close;
+    return newClose;
   }
 
   Future redirect(String url, [int code = 302]) {

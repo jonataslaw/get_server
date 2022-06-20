@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:get_server/get_server.dart';
 
 import '../../get_server.dart';
@@ -15,28 +16,28 @@ class Pageable extends GetWidget {
   Widget build(BuildContext context) {
     var pageparam = context.param('page');
     if (pageparam != null) {
-      var _page = int.tryParse(pageparam);
-      if (_page == null) {
+      var newPage = int.tryParse(pageparam);
+      if (newPage == null) {
         context.response!.status(HttpStatus.badRequest).sendJson(_Erro(
             errocode: HttpStatus.badRequest,
             description:
                 'The page parameter must receive an int: $pageparam it\'s not an int'));
         return WidgetEmpty();
       }
-      page = _page;
+      page = newPage;
     }
 
     var sizeparam = context.param('size');
     if (sizeparam != null) {
-      var _size = int.tryParse(sizeparam);
-      if (_size == null) {
+      var newSize = int.tryParse(sizeparam);
+      if (newSize == null) {
         context.response!.status(HttpStatus.badRequest).sendJson(_Erro(
             errocode: HttpStatus.badRequest,
             description:
                 'The size parameter must receive an int: $sizeparam it\'s not an int'));
         return WidgetEmpty();
       }
-      size = _size;
+      size = newSize;
     }
 
     final fistElement = (page - 1) * size;

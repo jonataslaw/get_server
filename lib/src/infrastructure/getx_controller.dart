@@ -1,6 +1,5 @@
 import '../../get_server.dart';
 import '../context/context_response.dart';
-import '../framework/get_instance/src/lifecycle.dart';
 
 export '../framework/get_instance/src/bindings_interface.dart';
 export '../framework/get_instance/src/extension_instance.dart';

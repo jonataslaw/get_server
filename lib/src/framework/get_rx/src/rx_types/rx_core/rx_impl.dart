@@ -154,8 +154,8 @@ mixin NotifyManager<T> {
 
   /// Closes the subscriptions for this Rx, releasing the resources.
   void close() {
-    _subscriptions.forEach((getStream, _subscriptions) {
-      for (final subscription in _subscriptions) {
+    _subscriptions.forEach((getStream, newSubscriptions) {
+      for (final subscription in newSubscriptions) {
         subscription.cancel();
       }
     });
@@ -281,18 +281,21 @@ extension RxnBoolExt on Rx<bool?> {
 
   bool? get isFalse {
     if (value != null) return !isTrue!;
+    return null;
   }
 
   bool? operator &(bool other) {
     if (value != null) {
       return other && value!;
     }
+    return null;
   }
 
   bool? operator |(bool other) {
     if (value != null) {
       return other || value!;
     }
+    return null;
   }
 
   bool? operator ^(bool other) => !other == value;
@@ -307,6 +310,7 @@ extension RxnBoolExt on Rx<bool?> {
       subject.add(_value = !_value!);
       return this;
     }
+    return null;
   }
 }
 

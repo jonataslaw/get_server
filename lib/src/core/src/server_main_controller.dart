@@ -128,12 +128,12 @@ class GetServerController extends GetxController {
   void _homeParser() {
     if (home == null) return;
     if (home is FolderWidget) {
-      var _home = home as FolderWidget;
+      var newHome = home as FolderWidget;
       _public = Public(
-        _home.folder,
-        allowDirectoryListing: _home.allowDirectoryListing,
-        followLinks: _home.followLinks,
-        jailRoot: _home.jailRoot,
+        newHome.folder,
+        allowDirectoryListing: newHome.allowDirectoryListing,
+        followLinks: newHome.followLinks,
+        jailRoot: newHome.jailRoot,
       );
     } else {
       _getPages?.add(GetPage(name: '/', page: () => home));

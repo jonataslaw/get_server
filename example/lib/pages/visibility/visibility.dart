@@ -2,10 +2,10 @@ import 'package:get_server/get_server.dart';
 
 class VisibilityPage extends StatefulWidget {
   @override
-  _HomePageState createState() => _HomePageState();
+  HomePageState createState() => HomePageState();
 }
 
-class _HomePageState extends State<VisibilityPage> {
+class HomePageState extends State<VisibilityPage> {
   bool visible = false;
 
   @override

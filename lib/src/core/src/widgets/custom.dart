@@ -34,7 +34,7 @@ abstract class GetWidget<T> extends StatelessWidget {
 class WidgetEmpty extends Widget {
   const WidgetEmpty({Key? key}) : super(key: key);
   @override
-  Element? createElement(a, b) {
+  Element? createElement(request, getSocket) {
     return null;
   }
 }
@@ -210,17 +210,17 @@ abstract class ObxWidget extends StatefulWidget {
   const ObxWidget({Key? key}) : super(key: key);
 
   @override
-  _ObxState createState() => _ObxState();
+  ObxState createState() => ObxState();
 
   @protected
   Widget build();
 }
 
-class _ObxState extends State<ObxWidget> {
+class ObxState extends State<ObxWidget> {
   RxInterface? _observer;
   late StreamSubscription subs;
 
-  _ObxState() {
+  ObxState() {
     _observer = RxNotifier();
   }
 
@@ -313,10 +313,10 @@ class MultiPartWidget extends StatefulWidget {
   final MultiPartBuilder builder;
   final String name;
   @override
-  _MultiPartWidgetState createState() => _MultiPartWidgetState();
+  MultiPartWidgetState createState() => MultiPartWidgetState();
 }
 
-class _MultiPartWidgetState extends State<MultiPartWidget> {
+class MultiPartWidgetState extends State<MultiPartWidget> {
   @override
   void initState() {
     _decoderFile();
@@ -346,10 +346,10 @@ class PayloadWidget extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _PayloadWidgetState createState() => _PayloadWidgetState();
+  PayloadWidgetState createState() => PayloadWidgetState();
 }
 
-class _PayloadWidgetState extends State<PayloadWidget> {
+class PayloadWidgetState extends State<PayloadWidget> {
   Map? _payload;
   Widget? _error;
   bool visible = false;
@@ -622,6 +622,9 @@ class AsyncSnapshot<T> {
         other.error == error &&
         other.stackTrace == stackTrace;
   }
+
+  @override
+  int get hashCode => Object.hash(connectionState, data, error);
 }
 
 enum ConnectionState {

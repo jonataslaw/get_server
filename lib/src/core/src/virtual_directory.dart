@@ -28,7 +28,7 @@ class VirtualDirectory {
 
   final List<String> _pathPrefixSegments;
 
-  final RegExp _invalidPathRegExp = RegExp('[\\\/\x00]');
+  final RegExp _invalidPathRegExp = RegExp('[\\/\x00]');
 
   void Function(HttpRequest)? _errorCallback;
   void Function(Directory, HttpRequest)? _dirCallback;
@@ -152,6 +152,9 @@ class VirtualDirectory {
             return _locateResource(targetPath, segments);
           }
         }
+        break;
+
+      case FileSystemEntityType.notFound:
         break;
     }
     // Return `null` on fall-through, to indicate NOT_FOUND.
@@ -377,7 +380,7 @@ http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <title>$encodedReason: $encodedPath</title>
 </head>
 <body>
-<h1>Error $encodedError at \'$encodedPath\': $encodedReason</h1>
+<h1>Error $encodedError at '$encodedPath': $encodedReason</h1>
 $server
 </body>
 </html>''';
