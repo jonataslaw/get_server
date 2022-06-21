@@ -1,3 +1,6 @@
+# [1.2.1]
+- Fix send List as json
+
 # [1.2.0]
 - Fix send to room method
 
