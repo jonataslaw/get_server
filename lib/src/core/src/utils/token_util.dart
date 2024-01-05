@@ -31,8 +31,12 @@ abstract class TokenUtil {
 
   static String getTokenFromHeader(ContextRequest request) {
     var token = request.header('Authorization')!.first as String;
-    token = token.replaceAll('Bearer ', '');
-
+    if (token.startsWith('Basic ')) {
+      token = token.replaceAll('Basic ', '');
+      token = utf8.decode(base64Decode(token));
+    } else {
+      token = token.replaceAll('Bearer ', '');
+    }
     return token;
   }
 

@@ -104,8 +104,9 @@ class Route {
     try {
       if (token != null) {
         token = token.first;
-        if (token.contains('Bearer')) {
-          token = token.replaceAll('Bearer ', '');
+        if (token.contains('Bearer') ||
+            (req.requestMethod == Method.ws && token.contains('Basic'))) {
+          token = TokenUtil.getTokenFromHeader(req);
 
           var key = TokenUtil.getJwtKey()!;
           var decClaimSet = verifyJwtHS256Signature(token, key);
